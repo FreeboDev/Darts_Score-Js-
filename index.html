@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Darts Score</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <div class="app-logo" aria-label="VT logo">
+        <span class="logo-mark">&lt;/&gt;</span>
+        <span class="logo-text">VT</span>
+      </div>
+      <section class="score-panel">
+        <header class="panel-header">
+          <div>
+            <h1 class="title-row">
+              <svg class="title-dart-icon" viewBox="0 0 120 36" aria-hidden="true">
+                <polygon points="108,8 118,18 108,28 96,24 96,12" />
+                <rect x="90" y="15" width="22" height="6" rx="3" />
+                <circle cx="88" cy="18" r="4" />
+                <rect x="18" y="17" width="66" height="2" rx="1" />
+                <rect x="58" y="14" width="4" height="8" rx="1" />
+                <rect x="52" y="14" width="3" height="8" rx="1" />
+                <rect x="46" y="14" width="3" height="8" rx="1" />
+                <rect x="14" y="15" width="6" height="6" rx="2" />
+                <polygon points="2,18 14,18 14,20 2,20" />
+              </svg>
+              <span>Darts Score</span>
+            </h1>
+          </div>
+          <div class="panel-actions">
+            <button id="undoBtn" type="button">Undo</button>
+            <button id="newGameBtn" type="button">New game</button>
+          </div>
+        </header>
+
+        <section class="legs-box">
+          <h3>Рахунок по партіях</h3>
+          <div id="legsScore" class="legs-score"></div>
+        </section>
+
+        <div id="players" class="players"></div>
+
+        <footer class="panel-footer">
+          <p id="legResult" class="leg-result"></p>
+          <p id="checkoutHint" class="checkout-hint"></p>
+        </footer>
+      </section>
+
+      <section id="boardWrap" class="board-wrap">
+        <svg id="board" viewBox="0 0 840 840" aria-label="Darts board"></svg>
+      </section>
+    </main>
+
+    <section id="setupOverlay" class="setup-overlay">
+      <div class="setup-modal">
+        <h2>Початок гри</h2>
+        <p>Додайте гравців і запустіть матч 301.</p>
+        <div id="nameFields" class="name-fields"></div>
+        <div class="setup-actions">
+          <button id="addPlayerBtn" type="button">+ Додати гравця</button>
+          <button id="startGameBtn" type="button">Почати гру</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="finishOverlay" class="setup-overlay hidden">
+      <div class="setup-modal">
+        <h2>Партію закрито</h2>
+        <p id="finishText"></p>
+        <div class="setup-actions">
+          <button id="nextLegBtn" type="button">Наступна партія</button>
+        </div>
+      </div>
+    </section>
+
+    <script src="app.js"></script>
+  </body>
+</html>
