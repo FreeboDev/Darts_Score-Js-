@@ -27,17 +27,18 @@
                 <rect x="14" y="15" width="6" height="6" rx="2" />
                 <polygon points="2,18 14,18 14,20 2,20" />
               </svg>
-              <span>Darts Score</span>
+              <span id="titleLabel">Darts Score</span>
             </h1>
           </div>
           <div class="panel-actions">
+            <button id="languageBtn" type="button" aria-label="Switch language">🌐 UA/EN</button>
             <button id="undoBtn" type="button">Undo</button>
             <button id="newGameBtn" type="button">New game</button>
           </div>
         </header>
 
         <section class="legs-box">
-          <h3>Рахунок по партіях</h3>
+          <h3 id="legsTitle">Рахунок по партіях</h3>
           <div id="legsScore" class="legs-score"></div>
         </section>
 
@@ -56,8 +57,8 @@
 
     <section id="setupOverlay" class="setup-overlay">
       <div class="setup-modal">
-        <h2>Початок гри</h2>
-        <p>Додайте гравців і запустіть матч 301.</p>
+        <h2 id="setupTitle">Початок гри</h2>
+        <p id="setupSubtitle">Додайте гравців і запустіть матч 301.</p>
         <div id="nameFields" class="name-fields"></div>
         <div class="setup-actions">
           <button id="addPlayerBtn" type="button">+ Додати гравця</button>
@@ -68,7 +69,7 @@
 
     <section id="finishOverlay" class="setup-overlay hidden">
       <div class="setup-modal">
-        <h2>Партію закрито</h2>
+        <h2 id="finishTitle">Партію закрито</h2>
         <p id="finishText"></p>
         <div class="setup-actions">
           <button id="nextLegBtn" type="button">Наступна партія</button>

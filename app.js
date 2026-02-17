@@ -2,6 +2,7 @@ const board = document.getElementById("board");
 const playersRoot = document.getElementById("players");
 const undoBtn = document.getElementById("undoBtn");
 const newGameBtn = document.getElementById("newGameBtn");
+const languageBtn = document.getElementById("languageBtn");
 const setupOverlay = document.getElementById("setupOverlay");
 const nameFields = document.getElementById("nameFields");
 const addPlayerBtn = document.getElementById("addPlayerBtn");
@@ -13,6 +14,11 @@ const legsScore = document.getElementById("legsScore");
 const finishOverlay = document.getElementById("finishOverlay");
 const finishText = document.getElementById("finishText");
 const nextLegBtn = document.getElementById("nextLegBtn");
+const titleLabel = document.getElementById("titleLabel");
+const legsTitle = document.getElementById("legsTitle");
+const setupTitle = document.getElementById("setupTitle");
+const setupSubtitle = document.getElementById("setupSubtitle");
+const finishTitle = document.getElementById("finishTitle");
 
 const ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
 const START_SCORE = 301;
@@ -37,7 +43,86 @@ const state = {
   totalDarts: 0,
   gameStarted: false,
   pendingLegStarter: null,
+  lastClosedDart: null,
+  language: localStorage.getItem("darts_lang") || "uk",
 };
+
+const I18N = {
+  uk: {
+    appTitle: "Darts Score",
+    undo: "Скасувати",
+    newGame: "Нова гра",
+    legsTitle: "Рахунок по партіях",
+    setupTitle: "Початок гри",
+    setupSubtitle: "Додайте гравців і запустіть матч 301.",
+    addPlayer: "+ Додати гравця",
+    removePlayer: "Видалити",
+    startGame: "Почати гру",
+    finishTitle: "Партію закрито",
+    nextLeg: "Наступна партія",
+    prevTurn: "Попер. хід",
+    checkoutPrefix: "Закриття",
+    legClosed: "Партію закрито",
+    minPlayers: "Потрібно мінімум 2 гравці",
+    namePlaceholder: "Впишіть ім'я",
+  },
+  en: {
+    appTitle: "Darts Score",
+    undo: "Undo",
+    newGame: "New game",
+    legsTitle: "Leg score",
+    setupTitle: "Start game",
+    setupSubtitle: "Add players and start the 301 match.",
+    addPlayer: "+ Add player",
+    removePlayer: "Remove",
+    startGame: "Start game",
+    finishTitle: "Leg closed",
+    nextLeg: "Next leg",
+    prevTurn: "Prev. turn",
+    checkoutPrefix: "Checkout",
+    legClosed: "Leg closed",
+    minPlayers: "At least 2 players are required",
+    namePlaceholder: "Enter name",
+  },
+};
+
+function t(key) {
+  return I18N[state.language][key];
+}
+
+function applyLanguage() {
+  document.documentElement.lang = state.language === "uk" ? "uk" : "en";
+  document.title = t("appTitle");
+  titleLabel.textContent = t("appTitle");
+  undoBtn.textContent = t("undo");
+  newGameBtn.textContent = t("newGame");
+  legsTitle.textContent = t("legsTitle");
+  setupTitle.textContent = t("setupTitle");
+  setupSubtitle.textContent = t("setupSubtitle");
+  addPlayerBtn.textContent = t("addPlayer");
+  startGameBtn.textContent = t("startGame");
+  finishTitle.textContent = t("finishTitle");
+  nextLegBtn.textContent = t("nextLeg");
+  languageBtn.textContent = state.language === "uk" ? "🌐 UA" : "🌐 EN";
+  [...nameFields.querySelectorAll(".name-input")].forEach((input) => {
+    input.placeholder = t("namePlaceholder");
+  });
+  [...nameFields.querySelectorAll(".remove-btn")].forEach((btn) => {
+    btn.textContent = t("removePlayer");
+  });
+}
+
+function setLanguage(lang) {
+  state.language = lang;
+  localStorage.setItem("darts_lang", lang);
+  applyLanguage();
+  updateLegTexts();
+  renderPlayers();
+}
+
+function toggleLanguage() {
+  setLanguage(state.language === "uk" ? "en" : "uk");
+}
 
 const FIRST_DART_OPTIONS = [];
 for (let i = 20; i >= 1; i -= 1) {
@@ -246,7 +331,7 @@ function renderPlayers() {
       <rect x="46" y="14" width="3" height="8" rx="1"></rect>
       <rect x="14" y="15" width="6" height="6" rx="2"></rect>
       <polygon points="2,18 14,18 14,20 2,20"></polygon>
-    </svg> ${player.totalDarts} | Попер. хід: ${player.lastTurnTotal}`;
+    </svg> ${player.totalDarts} | ${t("prevTurn")}: ${player.lastTurnTotal}`;
 
     nameWrap.appendChild(name);
     nameWrap.appendChild(meta);
@@ -362,7 +447,18 @@ function getCheckoutHint() {
     return "";
   }
 
-  return `Checkout ${player.score}: ${checkout}`;
+  return `${t("checkoutPrefix")} ${player.score}: ${checkout}`;
+}
+
+function updateLegTexts() {
+  if (state.lastClosedDart === null) {
+    legResult.textContent = "";
+    finishText.textContent = "";
+    return;
+  }
+  const text = `${t("legClosed")}: ${state.lastClosedDart}`;
+  legResult.textContent = text;
+  finishText.textContent = text;
 }
 
 function startNewLeg(startingPlayer) {
@@ -380,13 +476,13 @@ function startNewLeg(startingPlayer) {
   state.gameStarted = true;
 }
 
-function finishLeg(winnerIndex, dartNumber, finishLabel) {
+function finishLeg(winnerIndex, dartNumber) {
   const winner = state.players[winnerIndex];
   winner.legsWon += 1;
-  legResult.textContent = `Партію закрито: ${dartNumber}`;
+  state.lastClosedDart = dartNumber;
+  updateLegTexts();
   state.gameStarted = false;
   state.pendingLegStarter = winnerIndex;
-  finishText.textContent = `Партію закрито: ${dartNumber}`;
   finishOverlay.classList.remove("hidden");
 }
 
@@ -415,8 +511,7 @@ function applyThrow(label, value) {
     playerTotalDarts: player.totalDarts,
     playerLegsWon: player.legsWon,
     playerLastTurnTotal: player.lastTurnTotal,
-    legResultText: legResult.textContent,
-    finishText: finishText.textContent,
+    lastClosedDart: state.lastClosedDart,
     finishModalOpen: !finishOverlay.classList.contains("hidden"),
   };
 
@@ -443,7 +538,7 @@ function applyThrow(label, value) {
   state.dartInTurn += 1;
 
   if (player.score === 0) {
-    finishLeg(state.currentPlayer, state.dartInTurn, label);
+    finishLeg(state.currentPlayer, state.dartInTurn);
   } else if (state.dartInTurn >= 3) {
     nextPlayer();
   }
@@ -468,6 +563,7 @@ function undo() {
   state.totalDarts = snapshot.totalDarts;
   state.gameStarted = snapshot.gameStarted;
   state.pendingLegStarter = snapshot.pendingLegStarter;
+  state.lastClosedDart = snapshot.lastClosedDart;
 
   const player = state.players[state.currentPlayer];
   player.score = snapshot.playerScore;
@@ -478,8 +574,7 @@ function undo() {
   player.legsWon = snapshot.playerLegsWon;
   player.lastTurnTotal = snapshot.playerLastTurnTotal;
 
-  legResult.textContent = snapshot.legResultText;
-  finishText.textContent = snapshot.finishText;
+  updateLegTexts();
   if (snapshot.finishModalOpen) {
     finishOverlay.classList.remove("hidden");
   } else {
@@ -497,8 +592,8 @@ function resetMatch() {
   });
   state.totalDarts = 0;
   state.pendingLegStarter = null;
-  legResult.textContent = "";
-  finishText.textContent = "";
+  state.lastClosedDart = null;
+  updateLegTexts();
   finishOverlay.classList.add("hidden");
   startNewLeg(0);
 }
@@ -522,13 +617,13 @@ function addPlayerField(value = "") {
   const input = document.createElement("input");
   input.className = "name-input";
   input.type = "text";
-  input.placeholder = "Впишіть ім'я";
+  input.placeholder = t("namePlaceholder");
   input.value = value;
 
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
   removeBtn.className = "remove-btn";
-  removeBtn.textContent = "Видалити";
+  removeBtn.textContent = t("removePlayer");
   removeBtn.addEventListener("click", () => {
     if (nameFields.children.length <= 2) {
       return;
@@ -546,7 +641,7 @@ function startGameFromSetup() {
   const names = inputs.map((input) => input.value.trim()).filter(Boolean);
 
   if (names.length < 2) {
-    alert("Потрібно мінімум 2 гравці");
+    alert(t("minPlayers"));
     return;
   }
 
@@ -565,12 +660,15 @@ function startPendingLeg() {
 
   startNewLeg(state.pendingLegStarter);
   state.pendingLegStarter = null;
+  state.lastClosedDart = null;
+  updateLegTexts();
   finishOverlay.classList.add("hidden");
   renderPlayers();
 }
 
 undoBtn.addEventListener("click", undo);
 newGameBtn.addEventListener("click", newGame);
+languageBtn.addEventListener("click", toggleLanguage);
 addPlayerBtn.addEventListener("click", () => addPlayerField(""));
 startGameBtn.addEventListener("click", startGameFromSetup);
 nextLegBtn.addEventListener("click", startPendingLeg);
@@ -582,6 +680,8 @@ boardWrap.addEventListener("click", (event) => {
 });
 
 drawBoard();
+applyLanguage();
 addPlayerField("");
 addPlayerField("");
+updateLegTexts();
 renderPlayers();
