@@ -627,3 +627,19 @@ button:hover {
     flex-direction: column;
   }
 }
+
+/* iPad/tablet: hide legs panel so dartboard has more space */
+@media (min-width: 768px) and (max-width: 1180px) {
+  .legs-box {
+    display: none;
+  }
+
+  .board-wrap {
+    margin-top: -40px;
+    padding-top: 0;
+  }
+
+  #board {
+    max-height: calc(100vh - 372px);
+  }
+}
