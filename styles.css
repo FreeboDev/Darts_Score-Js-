@@ -406,14 +406,127 @@ button:hover {
   filter: brightness(1.14);
 }
 
+.board-wire {
+  stroke: #8f99a6;
+  stroke-opacity: 0.78;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
 .number-label {
-  fill: #e5e1ba;
-  font-family: "Trebuchet MS", sans-serif;
+  fill: #b7bcc4;
+  font-family: "Arial Black", "Impact", "Trebuchet MS", sans-serif;
   font-size: 40px;
-  font-weight: 700;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  paint-order: stroke fill;
+  stroke: rgba(16, 20, 28, 0.55);
+  stroke-width: 1.2px;
   text-anchor: middle;
   dominant-baseline: middle;
   pointer-events: none;
+}
+
+.board-brand {
+  fill: #f1dfb8;
+  font-family: "Arial Rounded MT Bold", "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: none;
+  pointer-events: none;
+  opacity: 0.92;
+  filter: drop-shadow(0 1px 0 rgba(15, 18, 22, 0.4));
+}
+
+.board-brand-reg {
+  font-size: 9px;
+}
+
+.board-bottom-main {
+  fill: #f0e5cb;
+  font-family: "Arial Black", "Impact", "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  pointer-events: none;
+  opacity: 0.98;
+  filter: drop-shadow(0 1px 0 rgba(18, 20, 24, 0.62));
+}
+
+.board-bottom-main-six {
+  fill: #ff2f1f;
+}
+
+.board-bottom-main-bar {
+  font-size: 34px;
+  font-weight: 900;
+  stroke-width: 1.2;
+  paint-order: stroke fill;
+}
+
+.board-bottom-main-bar-red {
+  fill: #ff2f1f;
+}
+
+.board-bottom-main-bar-cream {
+  fill: #f0e5cb;
+}
+
+.board-bottom-main-bar-gray {
+  fill: #a7adb5;
+}
+
+.board-bottom-main-tm {
+  font-size: 7px;
+  fill: #f0e5cb;
+}
+
+.board-bottom-sub {
+  fill: #ded8c8;
+  font-family: "Arial", "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.35px;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.board-side-badge {
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+.board-side-badge-triple-box {
+  fill: #0f1218;
+  stroke: #d5d9e0;
+  stroke-width: 1;
+}
+
+.board-side-badge-triple-text {
+  fill: #f3f5f8;
+  font-family: "Arial Black", "Segoe UI", sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.7px;
+}
+
+.board-side-badge-core-box {
+  fill: #ff2f1f;
+}
+
+.board-side-badge-core-text {
+  fill: #161a22;
+  font-family: "Arial Black", "Segoe UI", sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+
+.board-side-badge-carbon {
+  fill: #cfd4dc;
+  font-family: "Arial", "Segoe UI", sans-serif;
+  font-size: 7px;
+  letter-spacing: 1.1px;
 }
 
 .setup-overlay {

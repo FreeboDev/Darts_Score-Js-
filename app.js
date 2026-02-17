@@ -22,13 +22,16 @@ const finishTitle = document.getElementById("finishTitle");
 
 const ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
 const START_SCORE = 301;
+const BOARD_BRAND = "winmau";
+const BOARD_BOTTOM_MAIN = "BLADE 6";
+const BOARD_BOTTOM_SUB = "SIXTH GENERATION BLADE TECHNOLOGY";
 const TAU = Math.PI * 2;
 const CENTER = 420;
 
 const RADII = {
   boardOuter: 398,
-  doubleOuter: 355,
-  doubleInner: 325,
+  doubleOuter: 338,
+  doubleInner: 308,
   tripleOuter: 230,
   tripleInner: 200,
   bullOuter: 72,
@@ -202,6 +205,170 @@ function drawBoard() {
   const step = TAU / 20;
   const startOffset = -Math.PI / 2 - step / 2;
 
+  const brandRadius = 346;
+  const brandStart = polarToCartesian(CENTER, CENTER, brandRadius, (-128 * Math.PI) / 180);
+  const brandEnd = polarToCartesian(CENTER, CENTER, brandRadius, (-52 * Math.PI) / 180);
+  const brandArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  brandArc.setAttribute("id", "boardBrandArc");
+  brandArc.setAttribute(
+    "d",
+    `M ${brandStart.x} ${brandStart.y} A ${brandRadius} ${brandRadius} 0 0 1 ${brandEnd.x} ${brandEnd.y}`
+  );
+  brandArc.setAttribute("fill", "none");
+  board.appendChild(brandArc);
+
+  const brandText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  brandText.setAttribute("class", "board-brand");
+  const brandTextPath = document.createElementNS("http://www.w3.org/2000/svg", "textPath");
+  brandTextPath.setAttribute("href", "#boardBrandArc");
+  brandTextPath.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#boardBrandArc");
+  brandTextPath.setAttribute("startOffset", "50%");
+  brandTextPath.setAttribute("text-anchor", "middle");
+  const brandMain = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+  brandMain.textContent = BOARD_BRAND;
+  const brandReg = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+  brandReg.setAttribute("class", "board-brand-reg");
+  brandReg.setAttribute("dx", "1");
+  brandReg.setAttribute("dy", "-18");
+  brandReg.textContent = "®";
+  brandTextPath.appendChild(brandMain);
+  brandTextPath.appendChild(brandReg);
+  brandText.appendChild(brandTextPath);
+  board.appendChild(brandText);
+
+  const bottomMainRadius = 366;
+  const bottomMainStart = polarToCartesian(CENTER, CENTER, bottomMainRadius, (170 * Math.PI) / 180);
+  const bottomMainEnd = polarToCartesian(CENTER, CENTER, bottomMainRadius, (10 * Math.PI) / 180);
+  const bottomMainArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  bottomMainArc.setAttribute("id", "boardBottomMainArc");
+  bottomMainArc.setAttribute(
+    "d",
+    `M ${bottomMainStart.x} ${bottomMainStart.y} A ${bottomMainRadius} ${bottomMainRadius} 0 0 0 ${bottomMainEnd.x} ${bottomMainEnd.y}`
+  );
+  bottomMainArc.setAttribute("fill", "none");
+  board.appendChild(bottomMainArc);
+
+  const bottomMainText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  bottomMainText.setAttribute("class", "board-bottom-main");
+  const bottomMainPath = document.createElementNS("http://www.w3.org/2000/svg", "textPath");
+  bottomMainPath.setAttribute("href", "#boardBottomMainArc");
+  bottomMainPath.setAttributeNS(
+    "http://www.w3.org/1999/xlink",
+    "xlink:href",
+    "#boardBottomMainArc"
+  );
+  bottomMainPath.setAttribute("startOffset", "50%");
+  bottomMainPath.setAttribute("text-anchor", "middle");
+  const bladeText = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+  bladeText.textContent = "BLADE";
+  const bladeBarRed = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+  bladeBarRed.setAttribute("class", "board-bottom-main-bar board-bottom-main-bar-red");
+  bladeBarRed.setAttribute("dx", "0.35");
+  bladeBarRed.textContent = "/";
+  const bladeBarCream = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+  bladeBarCream.setAttribute("class", "board-bottom-main-bar board-bottom-main-bar-cream");
+  bladeBarCream.setAttribute("dx", "-0.45");
+  bladeBarCream.textContent = "/";
+  const bladeBarGray = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+  bladeBarGray.setAttribute("class", "board-bottom-main-bar board-bottom-main-bar-gray");
+  bladeBarGray.setAttribute("dx", "-0.45");
+  bladeBarGray.textContent = "/";
+  const bladeSix = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+  bladeSix.setAttribute("class", "board-bottom-main-six");
+  bladeSix.setAttribute("dx", "0.45");
+  bladeSix.textContent = "6";
+  const bladeTm = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+  bladeTm.setAttribute("class", "board-bottom-main-tm");
+  bladeTm.setAttribute("dx", "0.65");
+  bladeTm.setAttribute("dy", "-13");
+  bladeTm.textContent = "™";
+  bottomMainPath.appendChild(bladeText);
+  bottomMainPath.appendChild(bladeBarRed);
+  bottomMainPath.appendChild(bladeBarCream);
+  bottomMainPath.appendChild(bladeBarGray);
+  bottomMainPath.appendChild(bladeSix);
+  bottomMainPath.appendChild(bladeTm);
+  bottomMainText.appendChild(bottomMainPath);
+  board.appendChild(bottomMainText);
+
+  const bottomSubRadius = 384;
+  const bottomSubStart = polarToCartesian(CENTER, CENTER, bottomSubRadius, (172 * Math.PI) / 180);
+  const bottomSubEnd = polarToCartesian(CENTER, CENTER, bottomSubRadius, (8 * Math.PI) / 180);
+  const bottomSubArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  bottomSubArc.setAttribute("id", "boardBottomSubArc");
+  bottomSubArc.setAttribute(
+    "d",
+    `M ${bottomSubStart.x} ${bottomSubStart.y} A ${bottomSubRadius} ${bottomSubRadius} 0 0 0 ${bottomSubEnd.x} ${bottomSubEnd.y}`
+  );
+  bottomSubArc.setAttribute("fill", "none");
+  board.appendChild(bottomSubArc);
+
+  const bottomSubText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  bottomSubText.setAttribute("class", "board-bottom-sub");
+  const bottomSubPath = document.createElementNS("http://www.w3.org/2000/svg", "textPath");
+  bottomSubPath.setAttribute("href", "#boardBottomSubArc");
+  bottomSubPath.setAttributeNS(
+    "http://www.w3.org/1999/xlink",
+    "xlink:href",
+    "#boardBottomSubArc"
+  );
+  bottomSubPath.setAttribute("startOffset", "50%");
+  bottomSubPath.setAttribute("text-anchor", "middle");
+  bottomSubPath.textContent = BOARD_BOTTOM_SUB;
+  bottomSubText.appendChild(bottomSubPath);
+  board.appendChild(bottomSubText);
+
+  // Side technology badge near 16 segment (TRIPLE CORE / CARBON style).
+  const sideBadge = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  sideBadge.setAttribute("class", "board-side-badge");
+  sideBadge.setAttribute("transform", "translate(108 570) rotate(59) scale(0.72)");
+
+  const tripleBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  tripleBox.setAttribute("x", "0");
+  tripleBox.setAttribute("y", "0");
+  tripleBox.setAttribute("width", "52");
+  tripleBox.setAttribute("height", "16");
+  tripleBox.setAttribute("rx", "4");
+  tripleBox.setAttribute("class", "board-side-badge-triple-box");
+
+  const tripleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  tripleText.setAttribute("x", "26");
+  tripleText.setAttribute("y", "11");
+  tripleText.setAttribute("text-anchor", "middle");
+  tripleText.setAttribute("class", "board-side-badge-triple-text");
+  tripleText.textContent = "TRIPLE";
+
+  const coreBox = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  coreBox.setAttribute("x", "56");
+  coreBox.setAttribute("y", "0");
+  coreBox.setAttribute("width", "44");
+  coreBox.setAttribute("height", "16");
+  coreBox.setAttribute("rx", "4");
+  coreBox.setAttribute("class", "board-side-badge-core-box");
+
+  const coreText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  coreText.setAttribute("x", "78");
+  coreText.setAttribute("y", "11");
+  coreText.setAttribute("text-anchor", "middle");
+  coreText.setAttribute("class", "board-side-badge-core-text");
+  coreText.textContent = "CORE";
+
+  const carbonText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  carbonText.setAttribute("x", "49");
+  carbonText.setAttribute("y", "25");
+  carbonText.setAttribute("text-anchor", "middle");
+  carbonText.setAttribute("class", "board-side-badge-carbon");
+  carbonText.textContent = "C A R B O N";
+
+  sideBadge.appendChild(tripleBox);
+  sideBadge.appendChild(tripleText);
+  sideBadge.appendChild(coreBox);
+  sideBadge.appendChild(coreText);
+  sideBadge.appendChild(carbonText);
+  board.appendChild(sideBadge);
+
+  // Keep labels to render them after frame (top layer).
+  const labelNodes = [];
   for (let i = 0; i < 20; i += 1) {
     const value = ORDER[i];
     const start = startOffset + i * step;
@@ -259,13 +426,30 @@ function drawBoard() {
     }
 
     const labelAngle = start + step / 2;
-    const labelPoint = polarToCartesian(CENTER, CENTER, 378, labelAngle);
+    const labelPoint = polarToCartesian(CENTER, CENTER, 384, labelAngle);
     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
     text.textContent = String(value);
     text.setAttribute("x", labelPoint.x);
     text.setAttribute("y", labelPoint.y);
     text.setAttribute("class", "number-label");
-    board.appendChild(text);
+    labelNodes.push(text);
+  }
+
+  // Move badge above segments so it stays visible in the green 16 zone.
+  board.appendChild(sideBadge);
+
+  // Sector wires with a slight overshoot outside the double ring.
+  for (let i = 0; i < 20; i += 1) {
+    const angle = startOffset + i * step;
+    const innerPoint = polarToCartesian(CENTER, CENTER, RADII.tripleInner - 2, angle);
+    const outerPoint = polarToCartesian(CENTER, CENTER, RADII.doubleOuter + 18, angle);
+    const wire = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    wire.setAttribute("x1", innerPoint.x);
+    wire.setAttribute("y1", innerPoint.y);
+    wire.setAttribute("x2", outerPoint.x);
+    wire.setAttribute("y2", outerPoint.y);
+    wire.setAttribute("class", "board-wire");
+    board.appendChild(wire);
   }
 
   board.appendChild(
@@ -280,9 +464,13 @@ function drawBoard() {
   frame.setAttribute("cy", CENTER);
   frame.setAttribute("r", RADII.boardOuter + 3);
   frame.setAttribute("fill", "none");
-  frame.setAttribute("stroke", "#e5e1ba");
+  frame.setAttribute("stroke", "#a7adb6");
+  frame.setAttribute("stroke-opacity", "0.78");
   frame.setAttribute("stroke-width", "4");
   board.appendChild(frame);
+
+  labelNodes.forEach((node) => board.appendChild(node));
+
 }
 
 function renderLegsScore() {
