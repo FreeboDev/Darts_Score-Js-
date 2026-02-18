@@ -949,6 +949,7 @@ button:hover {
   }
 
   .score-panel {
+    position: relative;
     padding: 10px;
     background: linear-gradient(180deg, #1e2732, #1b2330);
     border-right: none;
@@ -979,6 +980,21 @@ button:hover {
 
   .legs-box {
     display: none;
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 52px;
+    margin: 0;
+    z-index: 24;
+    background: rgba(25, 35, 47, 0.97);
+    border-color: rgba(112, 232, 255, 0.24);
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.42),
+      0 0 14px rgba(45, 197, 233, 0.16);
+  }
+
+  body.mobile-legs-open .legs-box {
+    display: block;
   }
 
   .board-wrap {

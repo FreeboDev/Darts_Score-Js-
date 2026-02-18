@@ -231,6 +231,19 @@ function toggleDesktopLegsPanel() {
   document.body.classList.toggle("desktop-legs-open");
 }
 
+function syncMobileLegsPanel() {
+  if (!mobileMedia.matches) {
+    document.body.classList.remove("mobile-legs-open");
+  }
+}
+
+function toggleMobileLegsPanel() {
+  if (!mobileMedia.matches) {
+    return;
+  }
+  document.body.classList.toggle("mobile-legs-open");
+}
+
 function applyMobileLayout() {
   if (!appRoot || !scorePanel || !boardWrap || !playersRoot) {
     return;
@@ -1116,7 +1129,13 @@ if (titleRow) {
 if (desktopLegsToggle) {
   desktopLegsToggle.addEventListener("click", (event) => {
     event.stopPropagation();
-    toggleDesktopLegsPanel();
+    if (desktopMedia.matches) {
+      toggleDesktopLegsPanel();
+      return;
+    }
+    if (mobileMedia.matches) {
+      toggleMobileLegsPanel();
+    }
   });
 }
 if (start301Btn) {
@@ -1147,6 +1166,14 @@ document.addEventListener("click", (event) => {
     }
   }
 
+  if (mobileMedia.matches && document.body.classList.contains("mobile-legs-open")) {
+    const inLegs = legsBox && legsBox.contains(event.target);
+    const inMobileToggle = desktopLegsToggle && desktopLegsToggle.contains(event.target);
+    if (!inLegs && !inMobileToggle) {
+      document.body.classList.remove("mobile-legs-open");
+    }
+  }
+
   if (!iPadMedia.matches || !document.body.classList.contains("ipad-legs-open")) {
     return;
   }
@@ -1174,10 +1201,12 @@ if (typeof desktopMedia.addEventListener === "function") {
 if (typeof mobileMedia.addEventListener === "function") {
   mobileMedia.addEventListener("change", () => {
     applyMobileLayout();
+    syncMobileLegsPanel();
   });
 } else if (typeof mobileMedia.addListener === "function") {
   mobileMedia.addListener(() => {
     applyMobileLayout();
+    syncMobileLegsPanel();
   });
 }
 
@@ -1189,4 +1218,5 @@ updateLegTexts();
 renderPlayers();
 syncIpadLegsPanel();
 syncDesktopLegsPanel();
+syncMobileLegsPanel();
 applyMobileLayout();
