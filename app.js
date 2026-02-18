@@ -867,10 +867,12 @@ function startNewLeg(startingPlayer) {
     player.turnThrows = ["", "", ""];
     player.turnTotal = 0;
     player.turnStartScore = state.startScore;
+    player.totalDarts = 0;
     player.pointsScored = 0;
     player.lastTurnTotal = 0;
   });
 
+  state.totalDarts = 0;
   state.legStarter = startingPlayer;
   state.currentPlayer = startingPlayer;
   state.dartInTurn = 0;
