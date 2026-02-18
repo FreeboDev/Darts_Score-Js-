@@ -14,7 +14,7 @@
         <header class="panel-header">
           <div>
             <h1 class="title-row">
-              <svg class="title-dart-icon" viewBox="0 0 120 36" aria-hidden="true">
+              <svg id="desktopLegsToggle" class="title-dart-icon desktop-legs-toggle" viewBox="0 0 120 36" aria-label="Toggle leg score">
                 <polygon points="108,8 118,18 108,28 96,24 96,12" />
                 <rect x="90" y="15" width="22" height="6" rx="3" />
                 <circle cx="88" cy="18" r="4" />
@@ -28,10 +28,16 @@
               <span id="titleLabel">Darts Score</span>
             </h1>
           </div>
-          <div class="app-logo" aria-label="VT logo">
+          <a
+            class="app-logo"
+            href="https://my-web2-0.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="VT portfolio"
+          >
             <span class="logo-mark">&lt;/&gt;</span>
             <span class="logo-text">VT</span>
-          </div>
+          </a>
           <div class="panel-actions">
             <button id="languageBtn" type="button" aria-label="Switch language">🌐 UA/EN</button>
             <button id="legsToggleBtn" type="button">Рахунок</button>
@@ -75,14 +81,24 @@
             <span id="setupBrandLabel">Darts Score</span>
             <span class="setup-byline" aria-label="By VT logo">
               <span class="setup-byline-text">By</span>
-              <span class="setup-byline-logo">
+              <a
+                class="setup-byline-logo"
+                href="https://my-web2-0.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="VT portfolio"
+              >
                 <span class="setup-byline-mark">&lt;/&gt;</span>
                 <span class="setup-byline-vt">VT</span>
-              </span>
+              </a>
             </span>
           </span>
         </h2>
         <p id="setupSubtitle">Додайте гравців і запустіть матч 301.</p>
+        <div class="start-score-toggle" aria-label="Start score">
+          <button id="start301Btn" type="button" class="mode-btn active">301</button>
+          <button id="start501Btn" type="button" class="mode-btn">501</button>
+        </div>
         <div id="nameFields" class="name-fields"></div>
         <div class="setup-actions">
           <button id="addPlayerBtn" type="button">+ Додати гравця</button>
@@ -110,6 +126,17 @@
         <div id="bullPlayers" class="setup-actions"></div>
       </div>
     </section>
+
+    <a
+      class="mobile-bottom-logo"
+      href="https://my-web2-0.vercel.app"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="VT portfolio"
+    >
+      <span class="mobile-bottom-mark">&lt;/&gt;</span>
+      <span class="mobile-bottom-text">VT</span>
+    </a>
 
     <script src="app.js"></script>
   </body>

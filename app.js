@@ -10,6 +10,8 @@ const setupOverlay = document.getElementById("setupOverlay");
 const nameFields = document.getElementById("nameFields");
 const addPlayerBtn = document.getElementById("addPlayerBtn");
 const startGameBtn = document.getElementById("startGameBtn");
+const start301Btn = document.getElementById("start301Btn");
+const start501Btn = document.getElementById("start501Btn");
 const boardWrap = document.getElementById("boardWrap");
 const checkoutHint = document.getElementById("checkoutHint");
 const legResult = document.getElementById("legResult");
@@ -23,6 +25,7 @@ const bullTitle = document.getElementById("bullTitle");
 const bullTitleText = document.getElementById("bullTitleText");
 const bullText = document.getElementById("bullText");
 const bullPlayers = document.getElementById("bullPlayers");
+const desktopLegsToggle = document.getElementById("desktopLegsToggle");
 const titleRow = document.querySelector(".title-row");
 const titleLabel = document.getElementById("titleLabel");
 const legsTitle = document.getElementById("legsTitle");
@@ -32,7 +35,7 @@ const setupSubtitle = document.getElementById("setupSubtitle");
 const finishTitle = document.getElementById("finishTitle");
 
 const ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
-const START_SCORE = 301;
+const DEFAULT_START_SCORE = 301;
 const BOARD_BRAND = "winmau";
 const BOARD_BOTTOM_MAIN = "BLADE 6";
 const BOARD_BOTTOM_SUB = "SIXTH GENERATION BLADE TECHNOLOGY";
@@ -40,6 +43,8 @@ const TAU = Math.PI * 2;
 const CENTER = 420;
 const IPAD_QUERY = "(min-width: 768px) and (max-width: 1180px)";
 const iPadMedia = window.matchMedia(IPAD_QUERY);
+const DESKTOP_QUERY = "(min-width: 1181px)";
+const desktopMedia = window.matchMedia(DESKTOP_QUERY);
 const MOBILE_QUERY = "(max-width: 767px)";
 const mobileMedia = window.matchMedia(MOBILE_QUERY);
 
@@ -64,7 +69,8 @@ const state = {
   bullOffActive: false,
   pendingLegStarter: null,
   lastClosedDart: null,
-  language: localStorage.getItem("darts_lang") || "uk",
+  language: localStorage.getItem("darts_lang") || "en",
+  startScore: Number(localStorage.getItem("darts_start_score")) === 501 ? 501 : DEFAULT_START_SCORE,
 };
 
 const I18N = {
@@ -118,6 +124,31 @@ function t(key) {
   return I18N[state.language][key];
 }
 
+function updateSetupSubtitle() {
+  setupSubtitle.textContent =
+    state.language === "uk"
+      ? `Додайте гравців і запустіть матч ${state.startScore}.`
+      : `Add players and start the ${state.startScore} match.`;
+}
+
+function renderStartScoreToggle() {
+  if (!start301Btn || !start501Btn) {
+    return;
+  }
+  const is301 = state.startScore === 301;
+  start301Btn.classList.toggle("active", is301);
+  start501Btn.classList.toggle("active", !is301);
+  start301Btn.setAttribute("aria-pressed", String(is301));
+  start501Btn.setAttribute("aria-pressed", String(!is301));
+}
+
+function setStartScore(score) {
+  state.startScore = score === 501 ? 501 : 301;
+  localStorage.setItem("darts_start_score", String(state.startScore));
+  updateSetupSubtitle();
+  renderStartScoreToggle();
+}
+
 function applyLanguage() {
   document.documentElement.lang = state.language === "uk" ? "uk" : "en";
   document.title = t("appTitle");
@@ -134,7 +165,7 @@ function applyLanguage() {
   if (setupBrandLabel) {
     setupBrandLabel.textContent = t("appTitle");
   }
-  setupSubtitle.textContent = t("setupSubtitle");
+  updateSetupSubtitle();
   addPlayerBtn.textContent = t("addPlayer");
   startGameBtn.textContent = t("startGame");
   finishTitle.textContent = t("finishTitle");
@@ -153,6 +184,7 @@ function applyLanguage() {
   [...nameFields.querySelectorAll(".remove-btn")].forEach((btn) => {
     btn.textContent = t("removePlayer");
   });
+  renderStartScoreToggle();
 }
 
 function setLanguage(lang) {
@@ -186,6 +218,19 @@ function toggleIpadLegsPanel() {
   syncIpadLegsPanel();
 }
 
+function syncDesktopLegsPanel() {
+  if (!desktopMedia.matches) {
+    document.body.classList.remove("desktop-legs-open");
+  }
+}
+
+function toggleDesktopLegsPanel() {
+  if (!desktopMedia.matches) {
+    return;
+  }
+  document.body.classList.toggle("desktop-legs-open");
+}
+
 function applyMobileLayout() {
   if (!appRoot || !scorePanel || !boardWrap || !playersRoot) {
     return;
@@ -213,6 +258,10 @@ function renderBullPlayers() {
 
 function shouldStartBullOff() {
   if (!state.gameStarted || state.players.length < 1 || state.bullOffActive) {
+    return false;
+  }
+  // 39-dart bull-off rule is only for 301 mode.
+  if (state.startScore !== 301) {
     return false;
   }
   return state.players.every((player) => player.totalDarts >= 39);
@@ -279,10 +328,10 @@ DOUBLE_OPTIONS.push({ label: "DB", value: 50 });
 function createPlayer(name) {
   return {
     name,
-    score: START_SCORE,
+    score: state.startScore,
     turnThrows: ["", "", ""],
     turnTotal: 0,
-    turnStartScore: START_SCORE,
+    turnStartScore: state.startScore,
     totalDarts: 0,
     pointsScored: 0,
     legsWon: 0,
@@ -640,7 +689,7 @@ function renderPlayers() {
 
     const meta = document.createElement("div");
     meta.className = "player-meta";
-    const scoredThisLeg = START_SCORE - player.score;
+    const scoredThisLeg = state.startScore - player.score;
     const avgValue =
       player.totalDarts > 0 ? ((scoredThisLeg * 3) / player.totalDarts).toFixed(1) : "0.0";
     meta.innerHTML = `<svg class="meta-dart-icon" viewBox="0 0 120 36" aria-hidden="true">
@@ -801,10 +850,10 @@ function updateLegTexts() {
 
 function startNewLeg(startingPlayer) {
   state.players.forEach((player) => {
-    player.score = START_SCORE;
+    player.score = state.startScore;
     player.turnThrows = ["", "", ""];
     player.turnTotal = 0;
-    player.turnStartScore = START_SCORE;
+    player.turnStartScore = state.startScore;
     player.pointsScored = 0;
     player.lastTurnTotal = 0;
   });
@@ -1064,6 +1113,18 @@ languageBtn.addEventListener("click", toggleLanguage);
 if (titleRow) {
   titleRow.addEventListener("click", openSetupFromTitle);
 }
+if (desktopLegsToggle) {
+  desktopLegsToggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleDesktopLegsPanel();
+  });
+}
+if (start301Btn) {
+  start301Btn.addEventListener("click", () => setStartScore(301));
+}
+if (start501Btn) {
+  start501Btn.addEventListener("click", () => setStartScore(501));
+}
 if (legsToggleBtn) {
   legsToggleBtn.addEventListener("click", toggleIpadLegsPanel);
 }
@@ -1078,6 +1139,14 @@ boardWrap.addEventListener("click", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  if (desktopMedia.matches && document.body.classList.contains("desktop-legs-open")) {
+    const inLegs = legsBox && legsBox.contains(event.target);
+    const inDesktopToggle = desktopLegsToggle && desktopLegsToggle.contains(event.target);
+    if (!inLegs && !inDesktopToggle) {
+      document.body.classList.remove("desktop-legs-open");
+    }
+  }
+
   if (!iPadMedia.matches || !document.body.classList.contains("ipad-legs-open")) {
     return;
   }
@@ -1097,6 +1166,11 @@ if (typeof iPadMedia.addEventListener === "function") {
 } else if (typeof iPadMedia.addListener === "function") {
   iPadMedia.addListener(syncIpadLegsPanel);
 }
+if (typeof desktopMedia.addEventListener === "function") {
+  desktopMedia.addEventListener("change", syncDesktopLegsPanel);
+} else if (typeof desktopMedia.addListener === "function") {
+  desktopMedia.addListener(syncDesktopLegsPanel);
+}
 if (typeof mobileMedia.addEventListener === "function") {
   mobileMedia.addEventListener("change", () => {
     applyMobileLayout();
@@ -1114,4 +1188,5 @@ addPlayerField("");
 updateLegTexts();
 renderPlayers();
 syncIpadLegsPanel();
+syncDesktopLegsPanel();
 applyMobileLayout();
