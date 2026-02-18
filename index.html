@@ -94,6 +94,15 @@
             </span>
           </span>
         </h2>
+        <div class="auth-controls setup-auth-controls">
+          <button id="googleAuthBtn" type="button" class="auth-btn auth-icon-btn" aria-label="Sign in with Google">
+            G
+          </button>
+          <button id="appleAuthBtn" type="button" class="auth-btn auth-icon-btn" aria-label="Sign in with Apple">
+            
+          </button>
+          <button id="logoutAuthBtn" type="button" class="auth-btn hidden">Logout</button>
+        </div>
         <p id="setupSubtitle">Додайте гравців і запустіть матч 301.</p>
         <div class="start-score-toggle" aria-label="Start score">
           <button id="start301Btn" type="button" class="mode-btn active">301</button>
@@ -139,5 +148,7 @@
     </a>
 
     <script src="app.js"></script>
+    <script src="firebase-config.js"></script>
+    <script type="module" src="auth.js"></script>
   </body>
 </html>
