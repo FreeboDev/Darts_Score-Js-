@@ -3,6 +3,7 @@ const playersRoot = document.getElementById("players");
 const undoBtn = document.getElementById("undoBtn");
 const newGameBtn = document.getElementById("newGameBtn");
 const languageBtn = document.getElementById("languageBtn");
+const legsToggleBtn = document.getElementById("legsToggleBtn");
 const setupOverlay = document.getElementById("setupOverlay");
 const nameFields = document.getElementById("nameFields");
 const addPlayerBtn = document.getElementById("addPlayerBtn");
@@ -10,13 +11,21 @@ const startGameBtn = document.getElementById("startGameBtn");
 const boardWrap = document.getElementById("boardWrap");
 const checkoutHint = document.getElementById("checkoutHint");
 const legResult = document.getElementById("legResult");
+const legsBox = document.querySelector(".legs-box");
 const legsScore = document.getElementById("legsScore");
 const finishOverlay = document.getElementById("finishOverlay");
 const finishText = document.getElementById("finishText");
 const nextLegBtn = document.getElementById("nextLegBtn");
+const bullOverlay = document.getElementById("bullOverlay");
+const bullTitle = document.getElementById("bullTitle");
+const bullTitleText = document.getElementById("bullTitleText");
+const bullText = document.getElementById("bullText");
+const bullPlayers = document.getElementById("bullPlayers");
+const titleRow = document.querySelector(".title-row");
 const titleLabel = document.getElementById("titleLabel");
 const legsTitle = document.getElementById("legsTitle");
 const setupTitle = document.getElementById("setupTitle");
+const setupBrandLabel = document.getElementById("setupBrandLabel");
 const setupSubtitle = document.getElementById("setupSubtitle");
 const finishTitle = document.getElementById("finishTitle");
 
@@ -27,6 +36,8 @@ const BOARD_BOTTOM_MAIN = "BLADE 6";
 const BOARD_BOTTOM_SUB = "SIXTH GENERATION BLADE TECHNOLOGY";
 const TAU = Math.PI * 2;
 const CENTER = 420;
+const IPAD_QUERY = "(min-width: 768px) and (max-width: 1180px)";
+const iPadMedia = window.matchMedia(IPAD_QUERY);
 
 const RADII = {
   boardOuter: 398,
@@ -41,10 +52,12 @@ const RADII = {
 const state = {
   players: [],
   currentPlayer: 0,
+  legStarter: 0,
   dartInTurn: 0,
   history: [],
   totalDarts: 0,
   gameStarted: false,
+  bullOffActive: false,
   pendingLegStarter: null,
   lastClosedDart: null,
   language: localStorage.getItem("darts_lang") || "uk",
@@ -63,11 +76,15 @@ const I18N = {
     startGame: "Почати гру",
     finishTitle: "Партію закрито",
     nextLeg: "Наступна партія",
+    bullTitle: "BULL",
+    bullText: "Усі кинули 39 дротиків. Хто ближче до центру?",
     prevTurn: "Попер. хід",
     checkoutPrefix: "Закриття",
     legClosed: "Партію закрито",
-    minPlayers: "Потрібно мінімум 2 гравці",
+    minPlayers: "Потрібен мінімум 1 гравець",
     namePlaceholder: "Впишіть ім'я",
+    scoreBtn: "Рахунок",
+    avg: "Середнє",
   },
   en: {
     appTitle: "Darts Score",
@@ -81,11 +98,15 @@ const I18N = {
     startGame: "Start game",
     finishTitle: "Leg closed",
     nextLeg: "Next leg",
+    bullTitle: "BULL",
+    bullText: "Everyone reached 39 darts. Who is closer to the bull?",
     prevTurn: "Prev. turn",
     checkoutPrefix: "Checkout",
     legClosed: "Leg closed",
-    minPlayers: "At least 2 players are required",
+    minPlayers: "At least 1 player is required",
     namePlaceholder: "Enter name",
+    scoreBtn: "Score",
+    avg: "Average",
   },
 };
 
@@ -99,13 +120,28 @@ function applyLanguage() {
   titleLabel.textContent = t("appTitle");
   undoBtn.textContent = t("undo");
   newGameBtn.textContent = t("newGame");
+  if (legsToggleBtn) {
+    legsToggleBtn.textContent = t("scoreBtn");
+  }
   legsTitle.textContent = t("legsTitle");
-  setupTitle.textContent = t("setupTitle");
+  if (setupTitle) {
+    setupTitle.setAttribute("aria-label", t("appTitle"));
+  }
+  if (setupBrandLabel) {
+    setupBrandLabel.textContent = t("appTitle");
+  }
   setupSubtitle.textContent = t("setupSubtitle");
   addPlayerBtn.textContent = t("addPlayer");
   startGameBtn.textContent = t("startGame");
   finishTitle.textContent = t("finishTitle");
   nextLegBtn.textContent = t("nextLeg");
+  if (bullTitle) {
+    bullTitle.setAttribute("aria-label", t("bullTitle"));
+  }
+  if (bullTitleText) {
+    bullTitleText.textContent = t("bullTitle");
+  }
+  bullText.textContent = t("bullText");
   languageBtn.textContent = state.language === "uk" ? "🌐 UA" : "🌐 EN";
   [...nameFields.querySelectorAll(".name-input")].forEach((input) => {
     input.placeholder = t("namePlaceholder");
@@ -125,6 +161,85 @@ function setLanguage(lang) {
 
 function toggleLanguage() {
   setLanguage(state.language === "uk" ? "en" : "uk");
+}
+
+function syncIpadLegsPanel() {
+  if (!legsToggleBtn) {
+    return;
+  }
+  if (!iPadMedia.matches) {
+    document.body.classList.remove("ipad-legs-open");
+  }
+  const isOpen = iPadMedia.matches && document.body.classList.contains("ipad-legs-open");
+  legsToggleBtn.setAttribute("aria-expanded", String(isOpen));
+}
+
+function toggleIpadLegsPanel() {
+  if (!iPadMedia.matches) {
+    return;
+  }
+  document.body.classList.toggle("ipad-legs-open");
+  syncIpadLegsPanel();
+}
+
+function renderBullPlayers() {
+  if (!bullPlayers) {
+    return;
+  }
+  bullPlayers.innerHTML = "";
+  state.players.forEach((player, index) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = player.name;
+    btn.addEventListener("click", () => resolveBullOff(index));
+    bullPlayers.appendChild(btn);
+  });
+}
+
+function shouldStartBullOff() {
+  if (!state.gameStarted || state.players.length < 1 || state.bullOffActive) {
+    return false;
+  }
+  return state.players.every((player) => player.totalDarts >= 39);
+}
+
+function openBullOff() {
+  if (!bullOverlay) {
+    return;
+  }
+  state.bullOffActive = true;
+  state.gameStarted = false;
+  bullOverlay.classList.remove("hidden");
+  renderBullPlayers();
+}
+
+function resolveBullOff(winnerIndex) {
+  if (!state.bullOffActive) {
+    return;
+  }
+
+  const winner = state.players[winnerIndex];
+  winner.legsWon += 1;
+
+  // Bull-off winner starts a new leg flow immediately with fresh dart counters.
+  state.players.forEach((player) => {
+    player.totalDarts = 0;
+  });
+  state.totalDarts = 0;
+  state.lastClosedDart = null;
+  updateLegTexts();
+
+  const nextLegStarter = (state.legStarter + 1) % state.players.length;
+  state.pendingLegStarter = null;
+  state.bullOffActive = false;
+
+  if (bullOverlay) {
+    bullOverlay.classList.add("hidden");
+  }
+  finishOverlay.classList.add("hidden");
+
+  startNewLeg(nextLegStarter);
+  renderPlayers();
 }
 
 const FIRST_DART_OPTIONS = [];
@@ -154,6 +269,7 @@ function createPlayer(name) {
     turnTotal: 0,
     turnStartScore: START_SCORE,
     totalDarts: 0,
+    pointsScored: 0,
     legsWon: 0,
     lastTurnTotal: 0,
   };
@@ -509,6 +625,9 @@ function renderPlayers() {
 
     const meta = document.createElement("div");
     meta.className = "player-meta";
+    const scoredThisLeg = START_SCORE - player.score;
+    const avgValue =
+      player.totalDarts > 0 ? ((scoredThisLeg * 3) / player.totalDarts).toFixed(1) : "0.0";
     meta.innerHTML = `<svg class="meta-dart-icon" viewBox="0 0 120 36" aria-hidden="true">
       <polygon points="108,8 118,18 108,28 96,24 96,12"></polygon>
       <rect x="90" y="15" width="22" height="6" rx="3"></rect>
@@ -519,7 +638,22 @@ function renderPlayers() {
       <rect x="46" y="14" width="3" height="8" rx="1"></rect>
       <rect x="14" y="15" width="6" height="6" rx="2"></rect>
       <polygon points="2,18 14,18 14,20 2,20"></polygon>
-    </svg> ${player.totalDarts} | ${t("prevTurn")}: ${player.lastTurnTotal}`;
+    </svg> ${player.totalDarts} | <svg class="meta-prev-icon" viewBox="0 0 24 24" aria-label="${t(
+      "prevTurn"
+    )}">
+      <path d="M20 12H8"></path>
+      <path d="M12 8L8 12L12 16"></path>
+    </svg> ${player.lastTurnTotal} | <svg class="meta-avg-icon" viewBox="0 0 24 24" aria-label="${t(
+      "avg"
+    )}">
+      <circle cx="12" cy="12" r="8"></circle>
+      <circle cx="12" cy="12" r="4.2"></circle>
+      <circle cx="12" cy="12" r="1.7"></circle>
+      <path d="M12 2v3"></path>
+      <path d="M12 19v3"></path>
+      <path d="M2 12h3"></path>
+      <path d="M19 12h3"></path>
+    </svg> ${avgValue}`;
 
     nameWrap.appendChild(name);
     nameWrap.appendChild(meta);
@@ -571,6 +705,7 @@ function renderPlayers() {
 
 function nextPlayer() {
   const previousPlayer = state.players[state.currentPlayer];
+  previousPlayer.pointsScored += previousPlayer.turnTotal;
   previousPlayer.lastTurnTotal = previousPlayer.turnTotal;
   previousPlayer.turnThrows = ["", "", ""];
   previousPlayer.turnTotal = 0;
@@ -655,9 +790,11 @@ function startNewLeg(startingPlayer) {
     player.turnThrows = ["", "", ""];
     player.turnTotal = 0;
     player.turnStartScore = START_SCORE;
+    player.pointsScored = 0;
     player.lastTurnTotal = 0;
   });
 
+  state.legStarter = startingPlayer;
   state.currentPlayer = startingPlayer;
   state.dartInTurn = 0;
   state.history = [];
@@ -670,7 +807,8 @@ function finishLeg(winnerIndex, dartNumber) {
   state.lastClosedDart = dartNumber;
   updateLegTexts();
   state.gameStarted = false;
-  state.pendingLegStarter = winnerIndex;
+  state.bullOffActive = false;
+  state.pendingLegStarter = (state.legStarter + 1) % state.players.length;
   finishOverlay.classList.remove("hidden");
 }
 
@@ -688,19 +826,23 @@ function applyThrow(label, value) {
 
   const prev = {
     currentPlayer: state.currentPlayer,
+    legStarter: state.legStarter,
     dartInTurn: state.dartInTurn,
     totalDarts: state.totalDarts,
     gameStarted: state.gameStarted,
+    bullOffActive: state.bullOffActive,
     pendingLegStarter: state.pendingLegStarter,
     playerScore: player.score,
     playerTurnThrows: [...player.turnThrows],
     playerTurnTotal: player.turnTotal,
     playerTurnStartScore: player.turnStartScore,
     playerTotalDarts: player.totalDarts,
+    playerPointsScored: player.pointsScored,
     playerLegsWon: player.legsWon,
     playerLastTurnTotal: player.lastTurnTotal,
     lastClosedDart: state.lastClosedDart,
     finishModalOpen: !finishOverlay.classList.contains("hidden"),
+    bullModalOpen: bullOverlay ? !bullOverlay.classList.contains("hidden") : false,
   };
 
   state.history.push(prev);
@@ -712,9 +854,17 @@ function applyThrow(label, value) {
   const isDeadScore = nextScore === 1;
 
   if (nextScore < 0 || isDeadScore || !isValidFinish) {
+    // Bust ends the turn immediately, but this app counts a full 3-dart turn.
+    // Add remaining darts from the turn to player/match totals.
+    const remainingDartsInTurn = Math.max(0, 2 - state.dartInTurn);
+    state.totalDarts += remainingDartsInTurn;
+    player.totalDarts += remainingDartsInTurn;
     player.score = player.turnStartScore;
     player.turnTotal = 0;
     nextPlayer();
+    if (shouldStartBullOff()) {
+      openBullOff();
+    }
     renderPlayers();
     return;
   }
@@ -726,9 +876,14 @@ function applyThrow(label, value) {
   state.dartInTurn += 1;
 
   if (player.score === 0) {
+    player.pointsScored += player.turnTotal;
     finishLeg(state.currentPlayer, state.dartInTurn);
   } else if (state.dartInTurn >= 3) {
     nextPlayer();
+  }
+
+  if (shouldStartBullOff()) {
+    openBullOff();
   }
 
   renderPlayers();
@@ -747,9 +902,11 @@ function undo() {
   }
 
   state.currentPlayer = snapshot.currentPlayer;
+  state.legStarter = snapshot.legStarter;
   state.dartInTurn = snapshot.dartInTurn;
   state.totalDarts = snapshot.totalDarts;
   state.gameStarted = snapshot.gameStarted;
+  state.bullOffActive = snapshot.bullOffActive;
   state.pendingLegStarter = snapshot.pendingLegStarter;
   state.lastClosedDart = snapshot.lastClosedDart;
 
@@ -759,6 +916,7 @@ function undo() {
   player.turnTotal = snapshot.playerTurnTotal;
   player.turnStartScore = snapshot.playerTurnStartScore;
   player.totalDarts = snapshot.playerTotalDarts;
+  player.pointsScored = snapshot.playerPointsScored;
   player.legsWon = snapshot.playerLegsWon;
   player.lastTurnTotal = snapshot.playerLastTurnTotal;
 
@@ -768,6 +926,12 @@ function undo() {
   } else {
     finishOverlay.classList.add("hidden");
   }
+  if (snapshot.bullModalOpen) {
+    bullOverlay.classList.remove("hidden");
+    renderBullPlayers();
+  } else {
+    bullOverlay.classList.add("hidden");
+  }
 
   renderPlayers();
 }
@@ -775,14 +939,17 @@ function undo() {
 function resetMatch() {
   state.players.forEach((player) => {
     player.totalDarts = 0;
+    player.pointsScored = 0;
     player.legsWon = 0;
     player.lastTurnTotal = 0;
   });
   state.totalDarts = 0;
   state.pendingLegStarter = null;
+  state.bullOffActive = false;
   state.lastClosedDart = null;
   updateLegTexts();
   finishOverlay.classList.add("hidden");
+  bullOverlay.classList.add("hidden");
   startNewLeg(0);
 }
 
@@ -795,6 +962,26 @@ function newGame() {
   setupOverlay.classList.add("hidden");
   finishOverlay.classList.add("hidden");
   resetMatch();
+  renderPlayers();
+}
+
+function openSetupFromTitle() {
+  finishOverlay.classList.add("hidden");
+  bullOverlay.classList.add("hidden");
+  setupOverlay.classList.remove("hidden");
+  state.gameStarted = false;
+  state.bullOffActive = false;
+  document.body.classList.remove("ipad-legs-open");
+
+  const existingNames = state.players.map((player) => player.name).filter(Boolean);
+  nameFields.innerHTML = "";
+  if (existingNames.length > 0) {
+    existingNames.forEach((name) => addPlayerField(name));
+  } else {
+    addPlayerField("");
+    addPlayerField("");
+  }
+
   renderPlayers();
 }
 
@@ -813,7 +1000,7 @@ function addPlayerField(value = "") {
   removeBtn.className = "remove-btn";
   removeBtn.textContent = t("removePlayer");
   removeBtn.addEventListener("click", () => {
-    if (nameFields.children.length <= 2) {
+    if (nameFields.children.length <= 1) {
       return;
     }
     row.remove();
@@ -828,7 +1015,7 @@ function startGameFromSetup() {
   const inputs = [...nameFields.querySelectorAll(".name-input")];
   const names = inputs.map((input) => input.value.trim()).filter(Boolean);
 
-  if (names.length < 2) {
+  if (names.length < 1) {
     alert(t("minPlayers"));
     return;
   }
@@ -848,15 +1035,23 @@ function startPendingLeg() {
 
   startNewLeg(state.pendingLegStarter);
   state.pendingLegStarter = null;
+  state.bullOffActive = false;
   state.lastClosedDart = null;
   updateLegTexts();
   finishOverlay.classList.add("hidden");
+  bullOverlay.classList.add("hidden");
   renderPlayers();
 }
 
 undoBtn.addEventListener("click", undo);
 newGameBtn.addEventListener("click", newGame);
 languageBtn.addEventListener("click", toggleLanguage);
+if (titleRow) {
+  titleRow.addEventListener("click", openSetupFromTitle);
+}
+if (legsToggleBtn) {
+  legsToggleBtn.addEventListener("click", toggleIpadLegsPanel);
+}
 addPlayerBtn.addEventListener("click", () => addPlayerField(""));
 startGameBtn.addEventListener("click", startGameFromSetup);
 nextLegBtn.addEventListener("click", startPendingLeg);
@@ -867,9 +1062,31 @@ boardWrap.addEventListener("click", (event) => {
   }
 });
 
+document.addEventListener("click", (event) => {
+  if (!iPadMedia.matches || !document.body.classList.contains("ipad-legs-open")) {
+    return;
+  }
+  if (!legsBox || !legsToggleBtn) {
+    return;
+  }
+  const insidePanel = legsBox.contains(event.target);
+  const insideToggle = legsToggleBtn.contains(event.target);
+  if (!insidePanel && !insideToggle) {
+    document.body.classList.remove("ipad-legs-open");
+    syncIpadLegsPanel();
+  }
+});
+
+if (typeof iPadMedia.addEventListener === "function") {
+  iPadMedia.addEventListener("change", syncIpadLegsPanel);
+} else if (typeof iPadMedia.addListener === "function") {
+  iPadMedia.addListener(syncIpadLegsPanel);
+}
+
 drawBoard();
 applyLanguage();
 addPlayerField("");
 addPlayerField("");
 updateLegTexts();
 renderPlayers();
+syncIpadLegsPanel();

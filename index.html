@@ -4,14 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Darts Score</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="app">
-      <div class="app-logo" aria-label="VT logo">
-        <span class="logo-mark">&lt;/&gt;</span>
-        <span class="logo-text">VT</span>
-      </div>
       <section class="score-panel">
         <header class="panel-header">
           <div>
@@ -30,8 +28,13 @@
               <span id="titleLabel">Darts Score</span>
             </h1>
           </div>
+          <div class="app-logo" aria-label="VT logo">
+            <span class="logo-mark">&lt;/&gt;</span>
+            <span class="logo-text">VT</span>
+          </div>
           <div class="panel-actions">
             <button id="languageBtn" type="button" aria-label="Switch language">🌐 UA/EN</button>
+            <button id="legsToggleBtn" type="button">Рахунок</button>
             <button id="undoBtn" type="button">Undo</button>
             <button id="newGameBtn" type="button">New game</button>
           </div>
@@ -54,10 +57,31 @@
         <svg id="board" viewBox="0 0 840 840" aria-label="Darts board"></svg>
       </section>
     </main>
-
     <section id="setupOverlay" class="setup-overlay">
       <div class="setup-modal">
-        <h2 id="setupTitle">Початок гри</h2>
+        <h2 id="setupTitle" class="setup-brand-title" aria-label="Darts Score">
+          <span class="setup-brand-row">
+            <svg class="title-dart-icon setup-title-dart-icon" viewBox="0 0 120 36" aria-hidden="true">
+              <polygon points="108,8 118,18 108,28 96,24 96,12" />
+              <rect x="90" y="15" width="22" height="6" rx="3" />
+              <circle cx="88" cy="18" r="4" />
+              <rect x="18" y="17" width="66" height="2" rx="1" />
+              <rect x="58" y="14" width="4" height="8" rx="1" />
+              <rect x="52" y="14" width="3" height="8" rx="1" />
+              <rect x="46" y="14" width="3" height="8" rx="1" />
+              <rect x="14" y="15" width="6" height="6" rx="2" />
+              <polygon points="2,18 14,18 14,20 2,20" />
+            </svg>
+            <span id="setupBrandLabel">Darts Score</span>
+            <span class="setup-byline" aria-label="By VT logo">
+              <span class="setup-byline-text">By</span>
+              <span class="setup-byline-logo">
+                <span class="setup-byline-mark">&lt;/&gt;</span>
+                <span class="setup-byline-vt">VT</span>
+              </span>
+            </span>
+          </span>
+        </h2>
         <p id="setupSubtitle">Додайте гравців і запустіть матч 301.</p>
         <div id="nameFields" class="name-fields"></div>
         <div class="setup-actions">
@@ -74,6 +98,16 @@
         <div class="setup-actions">
           <button id="nextLegBtn" type="button">Наступна партія</button>
         </div>
+      </div>
+    </section>
+
+    <section id="bullOverlay" class="setup-overlay hidden">
+      <div class="setup-modal">
+        <h2 id="bullTitle" class="bull-neon-title" aria-label="BULL">
+          <span id="bullTitleText">BULL</span>
+        </h2>
+        <p id="bullText">Усі кинули 39 дротиків. Хто ближче до центру?</p>
+        <div id="bullPlayers" class="setup-actions"></div>
       </div>
     </section>
 
