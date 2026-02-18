@@ -844,6 +844,104 @@ button:hover {
   }
 }
 
+@media (max-width: 767px) {
+  body {
+    background: linear-gradient(120deg, var(--bg-1), #0d1420 40%, #081126);
+  }
+
+  .app {
+    width: calc(100vw - 12px);
+    margin: 6px auto;
+    border-radius: 14px;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.42);
+    background: linear-gradient(90deg, var(--panel) 0%, #1d2631 35%, #1f2936 100%);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .score-panel {
+    padding: 10px;
+    background: linear-gradient(180deg, #1e2732, #1b2330);
+    border-right: none;
+  }
+
+  .panel-header {
+    padding: 0;
+    margin: 0 0 10px;
+    border-bottom: none;
+  }
+
+  .panel-actions {
+    gap: 6px;
+  }
+
+  .panel-actions button {
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+
+  .title-row {
+    font-size: 22px;
+  }
+
+  .app-logo {
+    display: none;
+  }
+
+  .legs-box {
+    display: none;
+  }
+
+  .board-wrap {
+    padding: 8px 6px 4px;
+    margin: 0;
+    background: transparent;
+  }
+
+  #board {
+    width: min(100%, 640px);
+    max-height: none;
+  }
+
+  .players {
+    gap: 10px;
+    padding: 0 2px 6px;
+  }
+
+  .player {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .player-name {
+    font-size: 21px;
+  }
+
+  .player-score {
+    font-size: 50px;
+  }
+
+  .player-meta {
+    font-size: 13px;
+  }
+
+  .throw-box {
+    min-height: 52px;
+    font-size: 36px;
+  }
+
+  .turn-total {
+    font-size: 40px;
+    padding-right: 2px;
+  }
+
+  .panel-footer {
+    padding: 0 2px 8px;
+  }
+}
+
 /* iPad/tablet: hide legs panel so dartboard has more space */
 @media (min-width: 768px) and (max-width: 1180px) {
   .panel-header {

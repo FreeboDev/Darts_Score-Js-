@@ -1,4 +1,6 @@
 const board = document.getElementById("board");
+const appRoot = document.querySelector(".app");
+const scorePanel = document.querySelector(".score-panel");
 const playersRoot = document.getElementById("players");
 const undoBtn = document.getElementById("undoBtn");
 const newGameBtn = document.getElementById("newGameBtn");
@@ -38,6 +40,8 @@ const TAU = Math.PI * 2;
 const CENTER = 420;
 const IPAD_QUERY = "(min-width: 768px) and (max-width: 1180px)";
 const iPadMedia = window.matchMedia(IPAD_QUERY);
+const MOBILE_QUERY = "(max-width: 767px)";
+const mobileMedia = window.matchMedia(MOBILE_QUERY);
 
 const RADII = {
   boardOuter: 398,
@@ -180,6 +184,17 @@ function toggleIpadLegsPanel() {
   }
   document.body.classList.toggle("ipad-legs-open");
   syncIpadLegsPanel();
+}
+
+function applyMobileLayout() {
+  if (!appRoot || !scorePanel || !boardWrap || !playersRoot) {
+    return;
+  }
+  if (mobileMedia.matches) {
+    scorePanel.insertBefore(boardWrap, playersRoot);
+  } else if (boardWrap.parentElement !== appRoot) {
+    appRoot.appendChild(boardWrap);
+  }
 }
 
 function renderBullPlayers() {
@@ -1082,6 +1097,15 @@ if (typeof iPadMedia.addEventListener === "function") {
 } else if (typeof iPadMedia.addListener === "function") {
   iPadMedia.addListener(syncIpadLegsPanel);
 }
+if (typeof mobileMedia.addEventListener === "function") {
+  mobileMedia.addEventListener("change", () => {
+    applyMobileLayout();
+  });
+} else if (typeof mobileMedia.addListener === "function") {
+  mobileMedia.addListener(() => {
+    applyMobileLayout();
+  });
+}
 
 drawBoard();
 applyLanguage();
@@ -1090,3 +1114,4 @@ addPlayerField("");
 updateLegTexts();
 renderPlayers();
 syncIpadLegsPanel();
+applyMobileLayout();
