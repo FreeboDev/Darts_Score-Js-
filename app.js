@@ -15,6 +15,7 @@ const start501Btn = document.getElementById("start501Btn");
 const boardWrap = document.getElementById("boardWrap");
 const checkoutHint = document.getElementById("checkoutHint");
 const legResult = document.getElementById("legResult");
+const quickOutBtn = document.getElementById("quickOutBtn");
 const legsBox = document.querySelector(".legs-box");
 const legsScore = document.getElementById("legsScore");
 const finishOverlay = document.getElementById("finishOverlay");
@@ -71,6 +72,8 @@ const state = {
   lastClosedDart: null,
   language: localStorage.getItem("darts_lang") || "en",
   startScore: Number(localStorage.getItem("darts_start_score")) === 501 ? 501 : DEFAULT_START_SCORE,
+  quickOutInProgress: false,
+  pendingOutClearTimer: null,
 };
 
 const I18N = {
@@ -95,6 +98,7 @@ const I18N = {
     namePlaceholder: "Впишіть ім'я",
     scoreBtn: "Рахунок",
     avg: "Середнє",
+    quickOut: "3x Аут",
   },
   en: {
     appTitle: "Darts Score",
@@ -117,6 +121,7 @@ const I18N = {
     namePlaceholder: "Enter name",
     scoreBtn: "Score",
     avg: "Average",
+    quickOut: "3x Out",
   },
 };
 
@@ -177,6 +182,9 @@ function applyLanguage() {
     bullTitleText.textContent = t("bullTitle");
   }
   bullText.textContent = t("bullText");
+  if (quickOutBtn) {
+    quickOutBtn.textContent = t("quickOut");
+  }
   languageBtn.textContent = state.language === "uk" ? "🌐 UA" : "🌐 EN";
   [...nameFields.querySelectorAll(".name-input")].forEach((input) => {
     input.placeholder = t("namePlaceholder");
@@ -755,10 +763,19 @@ function renderPlayers() {
     const throws = document.createElement("div");
     throws.className = "player-throws";
 
-    player.turnThrows.forEach((item) => {
+    player.turnThrows.forEach((item, throwIndex) => {
       const box = document.createElement("div");
       box.className = "throw-box";
       box.textContent = item;
+      const shouldAnimateOut =
+        item === "0" &&
+        state.gameStarted &&
+        index === state.currentPlayer &&
+        state.dartInTurn > 0 &&
+        throwIndex === state.dartInTurn - 1;
+      if (shouldAnimateOut) {
+        box.classList.add("throw-box-out");
+      }
       throws.appendChild(box);
     });
 
@@ -777,15 +794,70 @@ function renderPlayers() {
   });
 
   checkoutHint.textContent = getCheckoutHint();
+  const canUseQuickOut = (() => {
+    if (!quickOutBtn || !state.gameStarted || state.players.length === 0) {
+      return false;
+    }
+    const player = state.players[state.currentPlayer];
+    return canCloseInOneDart(player.score);
+  })();
+  if (quickOutBtn) {
+    quickOutBtn.classList.toggle("hidden", !canUseQuickOut);
+    quickOutBtn.disabled = !canUseQuickOut || state.quickOutInProgress;
+  }
   renderLegsScore();
+}
+
+function delay(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function applyQuickOut() {
+  if (!state.gameStarted || state.players.length === 0 || state.quickOutInProgress) {
+    return;
+  }
+
+  state.quickOutInProgress = true;
+  renderPlayers();
+  const remaining = 3 - state.dartInTurn;
+  try {
+    for (let i = 0; i < remaining; i += 1) {
+      applyThrow("0", 0);
+      if (i < remaining - 1 && state.gameStarted) {
+        // Small delay so each OUT is clearly visible in the throw boxes.
+        await delay(320);
+      }
+    }
+  } finally {
+    state.quickOutInProgress = false;
+    renderPlayers();
+  }
 }
 
 function nextPlayer() {
   const previousPlayer = state.players[state.currentPlayer];
   previousPlayer.pointsScored += previousPlayer.turnTotal;
   previousPlayer.lastTurnTotal = previousPlayer.turnTotal;
-  previousPlayer.turnThrows = ["", "", ""];
   previousPlayer.turnTotal = 0;
+  const endedOnThirdDart = state.dartInTurn >= 3;
+  const lastThrowLabel = endedOnThirdDart ? previousPlayer.turnThrows[state.dartInTurn - 1] : "";
+  const endedOnManualOut = lastThrowLabel === "0";
+  if (state.pendingOutClearTimer) {
+    clearTimeout(state.pendingOutClearTimer);
+    state.pendingOutClearTimer = null;
+  }
+  if (state.quickOutInProgress || endedOnManualOut || endedOnThirdDart) {
+    const clearDelay = state.quickOutInProgress || endedOnManualOut ? 520 : 280;
+    state.pendingOutClearTimer = window.setTimeout(() => {
+      previousPlayer.turnThrows = ["", "", ""];
+      state.pendingOutClearTimer = null;
+      renderPlayers();
+    }, clearDelay);
+  } else {
+    previousPlayer.turnThrows = ["", "", ""];
+  }
   state.currentPlayer = (state.currentPlayer + 1) % state.players.length;
   state.dartInTurn = 0;
 }
@@ -835,6 +907,10 @@ function findCheckout(score, dartsLeft) {
   return null;
 }
 
+function canCloseInOneDart(score) {
+  return score === 50 || (score >= 2 && score <= 40 && score % 2 === 0);
+}
+
 function getCheckoutHint() {
   if (!state.gameStarted || state.players.length === 0) {
     return "";
@@ -862,6 +938,10 @@ function updateLegTexts() {
 }
 
 function startNewLeg(startingPlayer) {
+  if (state.pendingOutClearTimer) {
+    clearTimeout(state.pendingOutClearTimer);
+    state.pendingOutClearTimer = null;
+  }
   state.players.forEach((player) => {
     player.score = state.startScore;
     player.turnThrows = ["", "", ""];
@@ -975,6 +1055,10 @@ function onHit(event) {
 }
 
 function undo() {
+  if (state.pendingOutClearTimer) {
+    clearTimeout(state.pendingOutClearTimer);
+    state.pendingOutClearTimer = null;
+  }
   const snapshot = state.history.pop();
   if (!snapshot) {
     return;
@@ -1016,6 +1100,10 @@ function undo() {
 }
 
 function resetMatch() {
+  if (state.pendingOutClearTimer) {
+    clearTimeout(state.pendingOutClearTimer);
+    state.pendingOutClearTimer = null;
+  }
   state.players.forEach((player) => {
     player.totalDarts = 0;
     player.pointsScored = 0;
@@ -1146,6 +1234,12 @@ if (start301Btn) {
 if (start501Btn) {
   start501Btn.addEventListener("click", () => setStartScore(501));
 }
+if (quickOutBtn) {
+  quickOutBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    applyQuickOut();
+  });
+}
 if (legsToggleBtn) {
   legsToggleBtn.addEventListener("click", toggleIpadLegsPanel);
 }
@@ -1153,6 +1247,9 @@ addPlayerBtn.addEventListener("click", () => addPlayerField(""));
 startGameBtn.addEventListener("click", startGameFromSetup);
 nextLegBtn.addEventListener("click", startPendingLeg);
 boardWrap.addEventListener("click", (event) => {
+  if (event.target.closest("#quickOutBtn")) {
+    return;
+  }
   const isBoardSegment = event.target.closest(".board-segment, .board-bull, .board-ring");
   if (!isBoardSegment) {
     applyThrow("0", 0);
