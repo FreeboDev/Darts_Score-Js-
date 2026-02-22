@@ -349,6 +349,14 @@ button:hover {
   justify-content: space-between;
   color: #c8d1dc;
   font-size: 15px;
+  gap: 10px;
+}
+
+.legs-row strong {
+  color: #d9f7ff;
+  font-weight: 800;
+  font-size: 14px;
+  text-align: right;
 }
 
 .player {
@@ -420,6 +428,29 @@ button:hover {
   filter:
     drop-shadow(0 0 2px rgba(255, 150, 150, 0.85))
     drop-shadow(0 0 6px rgba(255, 98, 98, 0.65));
+}
+
+.meta-limit-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+  margin: 0 4px 0 3px;
+  fill: none;
+  stroke: #ffe37a;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 2px rgba(255, 232, 138, 0.9))
+    drop-shadow(0 0 7px rgba(255, 214, 85, 0.72));
+}
+
+.meta-limit-value {
+  color: #ffe98d;
+  text-shadow:
+    0 0 4px rgba(255, 236, 145, 0.82),
+    0 0 11px rgba(255, 214, 87, 0.58);
+  font-weight: 700;
 }
 
 .player-score {
@@ -847,16 +878,32 @@ button:hover {
 .start-score-toggle {
   display: inline-flex;
   gap: 8px;
-  margin: 0 0 12px;
+  margin: 0;
   padding: 4px;
+  min-height: 50px;
+  flex: none;
   border-radius: 12px;
   border: 1px solid rgba(112, 232, 255, 0.24);
   background: rgba(17, 30, 43, 0.76);
 }
 
+.setup-mode-row {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin: 0 0 12px;
+  justify-content: flex-start;
+}
+
 .mode-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-width: 68px;
   padding: 8px 14px;
+  min-height: 40px;
   border-radius: 9px;
   border: 1px solid rgba(112, 232, 255, 0.22);
   background: linear-gradient(135deg, rgba(20, 43, 58, 0.9), rgba(12, 26, 38, 0.88));
@@ -864,6 +911,184 @@ button:hover {
   font-weight: 800;
   letter-spacing: 0.3px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.mode-target-icon {
+  width: 17px;
+  height: 17px;
+  display: block;
+  align-self: center;
+  fill: none;
+  stroke: #ffe37a;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 2px rgba(255, 232, 138, 0.9))
+    drop-shadow(0 0 6px rgba(255, 214, 85, 0.68));
+}
+
+.mode-target-icon-leading {
+  margin: 0 2px 0 1px;
+}
+
+.bull-limit-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 8px;
+  min-height: 50px;
+  min-width: 168px;
+  flex: none;
+  border-radius: 12px;
+  border: 1px solid rgba(112, 232, 255, 0.24);
+  background: rgba(17, 30, 43, 0.76);
+}
+
+.sets-limit-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 8px;
+  min-height: 50px;
+  min-width: 146px;
+  flex: none;
+  border-radius: 12px;
+  border: 1px solid rgba(112, 232, 255, 0.24);
+  background: rgba(17, 30, 43, 0.76);
+}
+
+.bull-limit-control label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #b7f4ff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-shadow: 0 0 6px rgba(114, 236, 255, 0.42);
+  white-space: nowrap;
+}
+
+.bull-limit-label-flag {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: #ffe37a;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 3px rgba(255, 232, 138, 0.9))
+    drop-shadow(0 0 8px rgba(255, 214, 85, 0.7));
+}
+
+.sets-limit-control label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #b7f4ff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-shadow: 0 0 6px rgba(114, 236, 255, 0.42);
+  white-space: nowrap;
+}
+
+.sets-limit-label-icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: #ffe37a;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 3px rgba(255, 232, 138, 0.9))
+    drop-shadow(0 0 8px rgba(255, 214, 85, 0.7));
+}
+
+.bull-limit-control input,
+.sets-limit-control input {
+  width: 56px;
+  border: 1px solid rgba(116, 236, 255, 0.38);
+  border-radius: 8px;
+  background: rgba(33, 47, 64, 0.94);
+  color: #d9faff;
+  padding: 5px 6px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.bull-limit-control input:focus,
+.sets-limit-control input:focus {
+  outline: none;
+  border-color: rgba(116, 236, 255, 0.82);
+  box-shadow:
+    0 0 0 2px rgba(61, 201, 235, 0.35),
+    0 0 14px rgba(67, 213, 247, 0.3);
+}
+
+.sets-limit-control input {
+  width: 50px;
+}
+
+.bull-limit-spinner {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.bull-limit-spinner input {
+  padding-right: 30px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.bull-limit-spinner input::-webkit-outer-spin-button,
+.bull-limit-spinner input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.bull-limit-arrows {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 2px;
+}
+
+.bull-limit-arrow {
+  width: 20px;
+  height: 12px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 230, 138, 0.4);
+  background: linear-gradient(135deg, rgba(57, 52, 20, 0.96), rgba(42, 36, 13, 0.93));
+  color: #ffea96;
+  font-size: 9px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  text-shadow: 0 0 6px rgba(255, 232, 140, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 10px rgba(250, 214, 102, 0.28);
+}
+
+.bull-limit-arrow:hover {
+  border-color: rgba(255, 236, 156, 0.68);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 14px rgba(255, 222, 120, 0.42);
 }
 
 .mode-btn.active {
@@ -1243,6 +1468,58 @@ button:hover {
     text-shadow:
       0 0 4px rgba(155, 244, 255, 0.88),
       0 0 10px rgba(84, 225, 255, 0.76);
+  }
+
+  .setup-mode-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .start-score-toggle {
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .bull-limit-control {
+    width: calc(50% - 4px);
+    min-width: 0;
+    padding: 6px 7px;
+    justify-content: space-between;
+  }
+
+  .sets-limit-control {
+    display: inline-flex;
+    width: calc(50% - 4px);
+    min-width: 0;
+    padding: 6px 7px;
+    justify-content: space-between;
+  }
+
+  .bull-limit-control input {
+    width: 54px;
+  }
+
+  .sets-limit-control input {
+    width: 54px;
+  }
+
+  .bull-limit-control label,
+  .sets-limit-control label {
+    font-size: 11px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1180px) {
+  .setup-mode-row {
+    margin-left: 0;
+  }
+}
+
+@media (min-width: 1181px) {
+  .setup-mode-row {
+    margin-left: 0;
   }
 }
 

@@ -34,9 +34,20 @@ const setupTitle = document.getElementById("setupTitle");
 const setupBrandLabel = document.getElementById("setupBrandLabel");
 const setupSubtitle = document.getElementById("setupSubtitle");
 const finishTitle = document.getElementById("finishTitle");
+const bullLimitLabel = document.getElementById("bullLimitLabel");
+const bullLimitInput = document.getElementById("bullLimitInput");
+const bullLimitIncBtn = document.getElementById("bullLimitIncBtn");
+const bullLimitDecBtn = document.getElementById("bullLimitDecBtn");
+const setsToWinLabel = document.getElementById("setsToWinLabel");
+const setsToWinInput = document.getElementById("setsToWinInput");
+const setsIncBtn = document.getElementById("setsIncBtn");
+const setsDecBtn = document.getElementById("setsDecBtn");
 
 const ORDER = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
 const DEFAULT_START_SCORE = 301;
+const DEFAULT_BULL_OFF_DARTS = 39;
+const DEFAULT_SETS_TO_WIN = 1;
+const LEGS_PER_SET = 3;
 const BOARD_BRAND = "winmau";
 const BOARD_BOTTOM_MAIN = "BLADE 6";
 const BOARD_BOTTOM_SUB = "SIXTH GENERATION BLADE TECHNOLOGY";
@@ -69,9 +80,18 @@ const state = {
   gameStarted: false,
   bullOffActive: false,
   pendingLegStarter: null,
+  matchFinished: false,
   lastClosedDart: null,
   language: localStorage.getItem("darts_lang") || "en",
   startScore: Number(localStorage.getItem("darts_start_score")) === 501 ? 501 : DEFAULT_START_SCORE,
+  bullOffDarts: (() => {
+    const value = Number(localStorage.getItem("darts_bull_off_darts"));
+    return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_BULL_OFF_DARTS;
+  })(),
+  setsToWin: (() => {
+    const value = Number(localStorage.getItem("darts_sets_to_win"));
+    return Number.isFinite(value) && value > 0 ? Math.floor(value) : DEFAULT_SETS_TO_WIN;
+  })(),
   quickOutInProgress: false,
   pendingOutClearTimer: null,
 };
@@ -82,6 +102,7 @@ const I18N = {
     undo: "Скасувати",
     newGame: "Нова гра",
     legsTitle: "Рахунок по партіях",
+    setsToWinLabel: "Сет",
     setupTitle: "Початок гри",
     setupSubtitle: "Додайте гравців і запустіть матч 301.",
     addPlayer: "+ Додати гравця",
@@ -90,7 +111,8 @@ const I18N = {
     finishTitle: "Партію закрито",
     nextLeg: "Наступна партія",
     bullTitle: "BULL",
-    bullText: "Усі кинули 39 дротиків. Хто ближче до центру?",
+    bullText: "Усі кинули {limit} дротиків. Хто ближче до центру?",
+    bullLimitLabel: "Ліміт",
     prevTurn: "Попер. хід",
     checkoutPrefix: "Закриття",
     legClosed: "Партію закрито",
@@ -99,12 +121,18 @@ const I18N = {
     scoreBtn: "Рахунок",
     avg: "Середнє",
     quickOut: "3x Аут",
+    setsShort: "Сети",
+    legsShort: "Леги",
+    nextMatch: "Новий матч",
+    setWon: "{name} виграв сет ({setsWon}/{setsTarget})",
+    matchWon: "{name} виграв матч ({setsWon}/{setsTarget})",
   },
   en: {
     appTitle: "Darts Score",
     undo: "Undo",
     newGame: "New game",
     legsTitle: "Leg score",
+    setsToWinLabel: "Set",
     setupTitle: "Start game",
     setupSubtitle: "Add players and start the 301 match.",
     addPlayer: "+ Add player",
@@ -113,7 +141,8 @@ const I18N = {
     finishTitle: "Leg closed",
     nextLeg: "Next leg",
     bullTitle: "BULL",
-    bullText: "Everyone reached 39 darts. Who is closer to the bull?",
+    bullText: "Everyone reached {limit} darts. Who is closer to the bull?",
+    bullLimitLabel: "Limit",
     prevTurn: "Prev. turn",
     checkoutPrefix: "Checkout",
     legClosed: "Leg closed",
@@ -122,11 +151,20 @@ const I18N = {
     scoreBtn: "Score",
     avg: "Average",
     quickOut: "3x Out",
+    setsShort: "Sets",
+    legsShort: "Legs",
+    nextMatch: "New match",
+    setWon: "{name} won the set ({setsWon}/{setsTarget})",
+    matchWon: "{name} won the match ({setsWon}/{setsTarget})",
   },
 };
 
 function t(key) {
   return I18N[state.language][key];
+}
+
+function withVars(template, vars) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => String(vars[key] ?? ""));
 }
 
 function updateSetupSubtitle() {
@@ -174,14 +212,30 @@ function applyLanguage() {
   addPlayerBtn.textContent = t("addPlayer");
   startGameBtn.textContent = t("startGame");
   finishTitle.textContent = t("finishTitle");
-  nextLegBtn.textContent = t("nextLeg");
+  nextLegBtn.textContent = state.matchFinished ? t("nextMatch") : t("nextLeg");
   if (bullTitle) {
     bullTitle.setAttribute("aria-label", t("bullTitle"));
   }
   if (bullTitleText) {
     bullTitleText.textContent = t("bullTitle");
   }
-  bullText.textContent = t("bullText");
+  bullText.textContent = withVars(t("bullText"), { limit: state.bullOffDarts });
+  if (bullLimitLabel) {
+    bullLimitLabel.innerHTML = `${t("bullLimitLabel")} <svg class="bull-limit-label-flag" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 20V4"></path>
+      <path d="M6 5h11l-2 3 2 3H6"></path>
+    </svg>`;
+  }
+  if (setsToWinLabel) {
+    setsToWinLabel.innerHTML = `${t("setsToWinLabel")} <svg class="sets-limit-label-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M8 5h8v3a4 4 0 0 1-8 0z"></path>
+      <path d="M8 6H6a2 2 0 0 0 2 3"></path>
+      <path d="M16 6h2a2 2 0 0 1-2 3"></path>
+      <path d="M10 13h4"></path>
+      <path d="M12 13v4"></path>
+      <path d="M9 19h6"></path>
+    </svg>`;
+  }
   if (quickOutBtn) {
     quickOutBtn.textContent = t("quickOut");
   }
@@ -281,11 +335,62 @@ function shouldStartBullOff() {
   if (!state.gameStarted || state.players.length < 1 || state.bullOffActive) {
     return false;
   }
-  // 39-dart bull-off rule is only for 301 mode.
-  if (state.startScore !== 301) {
-    return false;
+  return state.players.every((player) => player.totalDarts >= state.bullOffDarts);
+}
+
+function setBullOffDartsLimit(value) {
+  const numeric = Number(value);
+  const normalized = Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : DEFAULT_BULL_OFF_DARTS;
+  state.bullOffDarts = normalized;
+  localStorage.setItem("darts_bull_off_darts", String(normalized));
+  if (bullLimitInput && Number(bullLimitInput.value) !== normalized) {
+    bullLimitInput.value = String(normalized);
   }
-  return state.players.every((player) => player.totalDarts >= 39);
+  bullText.textContent = withVars(t("bullText"), { limit: state.bullOffDarts });
+}
+
+function setSetsToWin(value) {
+  const numeric = Number(value);
+  const normalized = Number.isFinite(numeric) && numeric > 0 ? Math.floor(numeric) : DEFAULT_SETS_TO_WIN;
+  state.setsToWin = normalized;
+  localStorage.setItem("darts_sets_to_win", String(normalized));
+  if (setsToWinInput && Number(setsToWinInput.value) !== normalized) {
+    setsToWinInput.value = String(normalized);
+  }
+  renderLegsScore();
+}
+
+function changeBullOffDartsLimit(delta) {
+  const base = Number.isFinite(Number(bullLimitInput?.value)) ? Number(bullLimitInput.value) : state.bullOffDarts;
+  const next = Math.max(1, Math.floor(base + delta));
+  setBullOffDartsLimit(next);
+}
+
+function changeSetsToWin(delta) {
+  const base = Number.isFinite(Number(setsToWinInput?.value)) ? Number(setsToWinInput.value) : state.setsToWin;
+  const next = Math.max(1, Math.floor(base + delta));
+  setSetsToWin(next);
+}
+
+function registerLegWinner(winnerIndex) {
+  const winner = state.players[winnerIndex];
+  winner.legsInSet += 1;
+
+  let setWon = false;
+  let matchWon = false;
+
+  if (winner.legsInSet >= LEGS_PER_SET) {
+    setWon = true;
+    winner.setWins += 1;
+    state.players.forEach((player) => {
+      player.legsInSet = 0;
+    });
+    if (winner.setWins >= state.setsToWin) {
+      matchWon = true;
+    }
+  }
+
+  return { winner, setWon, matchWon };
 }
 
 function openBullOff() {
@@ -303,8 +408,7 @@ function resolveBullOff(winnerIndex) {
     return;
   }
 
-  const winner = state.players[winnerIndex];
-  winner.legsWon += 1;
+  const { winner, setWon, matchWon } = registerLegWinner(winnerIndex);
 
   // Bull-off winner starts a new leg flow immediately with fresh dart counters.
   state.players.forEach((player) => {
@@ -317,12 +421,37 @@ function resolveBullOff(winnerIndex) {
   const nextLegStarter = (state.legStarter + 1) % state.players.length;
   state.pendingLegStarter = null;
   state.bullOffActive = false;
+  state.matchFinished = matchWon;
 
   if (bullOverlay) {
     bullOverlay.classList.add("hidden");
   }
-  finishOverlay.classList.add("hidden");
+  if (matchWon) {
+    finishText.textContent = withVars(t("matchWon"), {
+      name: winner.name,
+      setsWon: winner.setWins,
+      setsTarget: state.setsToWin,
+    });
+    nextLegBtn.textContent = t("nextMatch");
+    finishOverlay.classList.remove("hidden");
+    renderPlayers();
+    return;
+  }
 
+  if (setWon) {
+    finishText.textContent = withVars(t("setWon"), {
+      name: winner.name,
+      setsWon: winner.setWins,
+      setsTarget: state.setsToWin,
+    });
+    nextLegBtn.textContent = t("nextLeg");
+    finishOverlay.classList.remove("hidden");
+    state.pendingLegStarter = nextLegStarter;
+    renderPlayers();
+    return;
+  }
+
+  finishOverlay.classList.add("hidden");
   startNewLeg(nextLegStarter);
   renderPlayers();
 }
@@ -355,7 +484,8 @@ function createPlayer(name) {
     turnStartScore: state.startScore,
     totalDarts: 0,
     pointsScored: 0,
-    legsWon: 0,
+    legsInSet: 0,
+    setWins: 0,
     lastTurnTotal: 0,
   };
 }
@@ -684,7 +814,7 @@ function renderLegsScore() {
     name.textContent = player.name;
 
     const score = document.createElement("strong");
-    score.textContent = String(player.legsWon);
+    score.textContent = `${t("setsShort")} ${player.setWins}/${state.setsToWin} | ${t("legsShort")} ${player.legsInSet}/${LEGS_PER_SET}`;
 
     row.appendChild(name);
     row.appendChild(score);
@@ -713,6 +843,7 @@ function renderPlayers() {
     const scoredThisLeg = state.startScore - player.score;
     const avgValue =
       player.totalDarts > 0 ? ((scoredThisLeg * 3) / player.totalDarts).toFixed(1) : "0.0";
+    const bullLimitValue = String(state.bullOffDarts);
     meta.innerHTML = `<svg class="meta-dart-icon" viewBox="0 0 120 36" aria-hidden="true">
       <polygon points="108,8 118,18 108,28 96,24 96,12"></polygon>
       <rect x="90" y="15" width="22" height="6" rx="3"></rect>
@@ -738,7 +869,10 @@ function renderPlayers() {
       <path d="M12 19v3"></path>
       <path d="M2 12h3"></path>
       <path d="M19 12h3"></path>
-    </svg> ${avgValue}`;
+    </svg> ${avgValue} | <svg class="meta-limit-icon" viewBox="0 0 24 24" aria-label="Bull-off limit">
+      <path d="M6 20V4"></path>
+      <path d="M6 5h11l-2 3 2 3H6"></path>
+    </svg> <span class="meta-limit-value">${bullLimitValue}</span>`;
 
     nameWrap.appendChild(name);
     nameWrap.appendChild(meta);
@@ -958,16 +1092,35 @@ function startNewLeg(startingPlayer) {
   state.dartInTurn = 0;
   state.history = [];
   state.gameStarted = true;
+  state.matchFinished = false;
 }
 
 function finishLeg(winnerIndex, dartNumber) {
-  const winner = state.players[winnerIndex];
-  winner.legsWon += 1;
+  const { winner, setWon, matchWon } = registerLegWinner(winnerIndex);
   state.lastClosedDart = dartNumber;
   updateLegTexts();
   state.gameStarted = false;
   state.bullOffActive = false;
-  state.pendingLegStarter = (state.legStarter + 1) % state.players.length;
+  state.matchFinished = matchWon;
+  state.pendingLegStarter = matchWon ? null : (state.legStarter + 1) % state.players.length;
+  if (matchWon) {
+    finishText.textContent = withVars(t("matchWon"), {
+      name: winner.name,
+      setsWon: winner.setWins,
+      setsTarget: state.setsToWin,
+    });
+    nextLegBtn.textContent = t("nextMatch");
+  } else if (setWon) {
+    finishText.textContent = withVars(t("setWon"), {
+      name: winner.name,
+      setsWon: winner.setWins,
+      setsTarget: state.setsToWin,
+    });
+    nextLegBtn.textContent = t("nextLeg");
+  } else {
+    finishText.textContent = `${t("legClosed")}: ${dartNumber}`;
+    nextLegBtn.textContent = t("nextLeg");
+  }
   finishOverlay.classList.remove("hidden");
 }
 
@@ -989,17 +1142,24 @@ function applyThrow(label, value) {
     dartInTurn: state.dartInTurn,
     totalDarts: state.totalDarts,
     gameStarted: state.gameStarted,
+    matchFinished: state.matchFinished,
     bullOffActive: state.bullOffActive,
     pendingLegStarter: state.pendingLegStarter,
+    allPlayersSetState: state.players.map((item) => ({
+      setWins: item.setWins,
+      legsInSet: item.legsInSet,
+    })),
     playerScore: player.score,
     playerTurnThrows: [...player.turnThrows],
     playerTurnTotal: player.turnTotal,
     playerTurnStartScore: player.turnStartScore,
     playerTotalDarts: player.totalDarts,
     playerPointsScored: player.pointsScored,
-    playerLegsWon: player.legsWon,
+    playerSetWins: player.setWins,
+    playerLegsInSet: player.legsInSet,
     playerLastTurnTotal: player.lastTurnTotal,
     lastClosedDart: state.lastClosedDart,
+    finishTextContent: finishText.textContent,
     finishModalOpen: !finishOverlay.classList.contains("hidden"),
     bullModalOpen: bullOverlay ? !bullOverlay.classList.contains("hidden") : false,
   };
@@ -1069,9 +1229,20 @@ function undo() {
   state.dartInTurn = snapshot.dartInTurn;
   state.totalDarts = snapshot.totalDarts;
   state.gameStarted = snapshot.gameStarted;
+  state.matchFinished = snapshot.matchFinished;
   state.bullOffActive = snapshot.bullOffActive;
   state.pendingLegStarter = snapshot.pendingLegStarter;
   state.lastClosedDart = snapshot.lastClosedDart;
+  if (snapshot.allPlayersSetState) {
+    state.players.forEach((item, idx) => {
+      const snap = snapshot.allPlayersSetState[idx];
+      if (!snap) {
+        return;
+      }
+      item.setWins = snap.setWins;
+      item.legsInSet = snap.legsInSet;
+    });
+  }
 
   const player = state.players[state.currentPlayer];
   player.score = snapshot.playerScore;
@@ -1080,7 +1251,8 @@ function undo() {
   player.turnStartScore = snapshot.playerTurnStartScore;
   player.totalDarts = snapshot.playerTotalDarts;
   player.pointsScored = snapshot.playerPointsScored;
-  player.legsWon = snapshot.playerLegsWon;
+  player.setWins = snapshot.playerSetWins;
+  player.legsInSet = snapshot.playerLegsInSet;
   player.lastTurnTotal = snapshot.playerLastTurnTotal;
 
   updateLegTexts();
@@ -1089,6 +1261,10 @@ function undo() {
   } else {
     finishOverlay.classList.add("hidden");
   }
+  if (typeof snapshot.finishTextContent === "string") {
+    finishText.textContent = snapshot.finishTextContent;
+  }
+  nextLegBtn.textContent = state.matchFinished ? t("nextMatch") : t("nextLeg");
   if (snapshot.bullModalOpen) {
     bullOverlay.classList.remove("hidden");
     renderBullPlayers();
@@ -1107,11 +1283,13 @@ function resetMatch() {
   state.players.forEach((player) => {
     player.totalDarts = 0;
     player.pointsScored = 0;
-    player.legsWon = 0;
+    player.setWins = 0;
+    player.legsInSet = 0;
     player.lastTurnTotal = 0;
   });
   state.totalDarts = 0;
   state.pendingLegStarter = null;
+  state.matchFinished = false;
   state.bullOffActive = false;
   state.lastClosedDart = null;
   updateLegTexts();
@@ -1137,6 +1315,7 @@ function openSetupFromTitle() {
   bullOverlay.classList.add("hidden");
   setupOverlay.classList.remove("hidden");
   state.gameStarted = false;
+  state.matchFinished = false;
   state.bullOffActive = false;
   document.body.classList.remove("ipad-legs-open");
 
@@ -1195,6 +1374,13 @@ function startGameFromSetup() {
 }
 
 function startPendingLeg() {
+  if (state.matchFinished) {
+    finishOverlay.classList.add("hidden");
+    bullOverlay.classList.add("hidden");
+    resetMatch();
+    renderPlayers();
+    return;
+  }
   if (state.pendingLegStarter === null) {
     finishOverlay.classList.add("hidden");
     return;
@@ -1233,6 +1419,26 @@ if (start301Btn) {
 }
 if (start501Btn) {
   start501Btn.addEventListener("click", () => setStartScore(501));
+}
+if (bullLimitInput) {
+  bullLimitInput.addEventListener("change", () => setBullOffDartsLimit(bullLimitInput.value));
+  bullLimitInput.addEventListener("blur", () => setBullOffDartsLimit(bullLimitInput.value));
+}
+if (setsToWinInput) {
+  setsToWinInput.addEventListener("change", () => setSetsToWin(setsToWinInput.value));
+  setsToWinInput.addEventListener("blur", () => setSetsToWin(setsToWinInput.value));
+}
+if (bullLimitIncBtn) {
+  bullLimitIncBtn.addEventListener("click", () => changeBullOffDartsLimit(1));
+}
+if (bullLimitDecBtn) {
+  bullLimitDecBtn.addEventListener("click", () => changeBullOffDartsLimit(-1));
+}
+if (setsIncBtn) {
+  setsIncBtn.addEventListener("click", () => changeSetsToWin(1));
+}
+if (setsDecBtn) {
+  setsDecBtn.addEventListener("click", () => changeSetsToWin(-1));
 }
 if (quickOutBtn) {
   quickOutBtn.addEventListener("click", (event) => {
@@ -1311,6 +1517,8 @@ if (typeof mobileMedia.addEventListener === "function") {
 
 drawBoard();
 applyLanguage();
+setBullOffDartsLimit(state.bullOffDarts);
+setSetsToWin(state.setsToWin);
 addPlayerField("");
 addPlayerField("");
 updateLegTexts();
