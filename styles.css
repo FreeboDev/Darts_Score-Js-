@@ -1109,8 +1109,52 @@ button:hover {
 
 .name-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 8px;
+}
+
+.order-controls {
+  display: grid;
+  align-items: center;
+}
+
+.order-btn {
+  width: 28px;
+  height: 44px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 230, 138, 0.55);
+  background: linear-gradient(135deg, rgba(63, 56, 20, 0.98), rgba(44, 38, 12, 0.94));
+  color: #ffe695;
+  text-shadow:
+    0 0 6px rgba(255, 232, 140, 0.8),
+    0 0 12px rgba(255, 214, 85, 0.6);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 12px rgba(250, 214, 102, 0.32);
+  font-weight: 900;
+  font-size: 11px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.order-btn::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid #ffe695;
+  margin-left: -3px;
+  filter:
+    drop-shadow(0 0 4px rgba(255, 232, 140, 0.8))
+    drop-shadow(0 0 8px rgba(255, 214, 85, 0.6));
+}
+
+.order-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  box-shadow: none;
 }
 
 .name-input {
@@ -1119,7 +1163,7 @@ button:hover {
   border-radius: 8px;
   background: rgba(41, 54, 71, 0.95);
   color: #e9f0f8;
-  padding: 10px 12px;
+  padding: 8px 12px;
   font-size: 16px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
@@ -1565,5 +1609,75 @@ button:hover {
 
   #board {
     max-height: calc(100vh - 372px);
+  }
+}
+
+/* iPad landscape: split layout (players left, board right) */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .app {
+    grid-template-columns: minmax(420px, 46%) minmax(420px, 54%);
+    align-items: stretch;
+    height: calc(100vh - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .panel-header {
+    align-items: center;
+    gap: 10px;
+    padding-right: 4px;
+  }
+
+  .title-row {
+    font-size: 22px;
+  }
+
+  .panel-actions {
+    gap: 6px;
+    margin-left: auto;
+    padding-right: 0;
+  }
+
+  .panel-actions button {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .app-logo {
+    position: absolute;
+    top: 10px;
+    right: 8px;
+    margin-left: 0;
+    margin-top: 0;
+    align-self: auto;
+    height: 28px;
+    line-height: 1;
+  }
+
+  .panel-header {
+    justify-content: flex-start;
+  }
+
+  .score-panel {
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .board-wrap {
+    margin-top: 0;
+    padding: 12px;
+    height: 100%;
+    align-content: center;
+  }
+
+  #board {
+    width: min(100%, 760px);
+    max-height: calc(100vh - 48px);
   }
 }

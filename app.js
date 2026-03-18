@@ -948,6 +948,26 @@ function delay(ms) {
   });
 }
 
+async function animateBustAsOuts(player) {
+  state.quickOutInProgress = true;
+  renderPlayers();
+
+  const startIndex = state.dartInTurn;
+  for (let index = startIndex; index < 3; index += 1) {
+    player.turnThrows[index] = "0";
+    renderPlayers();
+    if (index < 2) {
+      await delay(320);
+    }
+  }
+
+  state.quickOutInProgress = false;
+  player.turnTotal = 0;
+  player.score = player.turnStartScore;
+  state.dartInTurn = 3;
+  nextPlayer();
+}
+
 async function applyQuickOut() {
   if (!state.gameStarted || state.players.length === 0 || state.quickOutInProgress) {
     return;
@@ -1042,11 +1062,11 @@ function findCheckout(score, dartsLeft) {
 }
 
 function canCloseInOneDart(score) {
-  return score === 50 || (score >= 2 && score <= 40 && score % 2 === 0);
+  return score > 0 && score <= 50;
 }
 
 function getCheckoutHint() {
-  if (!state.gameStarted || state.players.length === 0) {
+  if (!state.gameStarted || state.players.length === 0 || state.quickOutInProgress) {
     return "";
   }
 
@@ -1125,7 +1145,7 @@ function finishLeg(winnerIndex, dartNumber) {
 }
 
 function applyThrow(label, value) {
-  if (!state.gameStarted || state.players.length === 0) {
+  if (!state.gameStarted || state.players.length === 0 || state.quickOutInProgress) {
     return;
   }
 
@@ -1178,13 +1198,12 @@ function applyThrow(label, value) {
     const remainingDartsInTurn = Math.max(0, 2 - state.dartInTurn);
     state.totalDarts += remainingDartsInTurn;
     player.totalDarts += remainingDartsInTurn;
-    player.score = player.turnStartScore;
-    player.turnTotal = 0;
-    nextPlayer();
-    if (shouldStartBullOff()) {
-      openBullOff();
-    }
-    renderPlayers();
+    animateBustAsOuts(player).then(() => {
+      if (shouldStartBullOff()) {
+        openBullOff();
+      }
+      renderPlayers();
+    });
     return;
   }
 
@@ -1331,6 +1350,17 @@ function openSetupFromTitle() {
   renderPlayers();
 }
 
+function updateOrderButtons() {
+  const rows = [...nameFields.querySelectorAll(".name-row")];
+  rows.forEach((row, index) => {
+    const swapBtn = row.querySelector(".order-btn");
+    if (swapBtn) {
+      swapBtn.disabled = rows.length < 2 || index !== 0;
+      swapBtn.style.visibility = index === 0 ? "visible" : "hidden";
+    }
+  });
+}
+
 function addPlayerField(value = "") {
   const row = document.createElement("div");
   row.className = "name-row";
@@ -1341,6 +1371,16 @@ function addPlayerField(value = "") {
   input.placeholder = t("namePlaceholder");
   input.value = value;
 
+  const orderControls = document.createElement("div");
+  orderControls.className = "order-controls";
+
+  const swapBtn = document.createElement("button");
+  swapBtn.type = "button";
+  swapBtn.className = "order-btn order-swap-btn";
+  swapBtn.setAttribute("aria-label", "Swap player order");
+  swapBtn.textContent = "";
+  orderControls.appendChild(swapBtn);
+
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
   removeBtn.className = "remove-btn";
@@ -1350,11 +1390,33 @@ function addPlayerField(value = "") {
       return;
     }
     row.remove();
+    updateOrderButtons();
+  });
+
+  swapBtn.addEventListener("click", () => {
+    const rows = [...nameFields.querySelectorAll(".name-row")];
+    if (rows.length < 2) {
+      return;
+    }
+    if (rows.length === 2) {
+      const first = rows[0];
+      const second = rows[1];
+      nameFields.insertBefore(second, first);
+      updateOrderButtons();
+      return;
+    }
+    const second = rows[1];
+    if (second) {
+      nameFields.insertBefore(second, rows[0]);
+      updateOrderButtons();
+    }
   });
 
   row.appendChild(input);
+  row.appendChild(orderControls);
   row.appendChild(removeBtn);
   nameFields.appendChild(row);
+  updateOrderButtons();
 }
 
 function startGameFromSetup() {
