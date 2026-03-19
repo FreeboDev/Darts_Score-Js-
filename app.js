@@ -20,6 +20,14 @@ const legsBox = document.querySelector(".legs-box");
 const legsScore = document.getElementById("legsScore");
 const finishOverlay = document.getElementById("finishOverlay");
 const finishText = document.getElementById("finishText");
+const finishWinner = document.getElementById("finishWinner");
+const finishStats = document.getElementById("finishStats");
+const finishDartsValue = document.getElementById("finishDartsValue");
+const finishAvgValue = document.getElementById("finishAvgValue");
+const finishCloseValue = document.getElementById("finishCloseValue");
+const finishDartsLabel = document.getElementById("finishDartsLabel");
+const finishAvgLabel = document.getElementById("finishAvgLabel");
+const finishCloseLabel = document.getElementById("finishCloseLabel");
 const nextLegBtn = document.getElementById("nextLegBtn");
 const bullOverlay = document.getElementById("bullOverlay");
 const bullTitle = document.getElementById("bullTitle");
@@ -94,6 +102,7 @@ const state = {
   })(),
   quickOutInProgress: false,
   pendingOutClearTimer: null,
+  finishSummary: null,
 };
 
 const I18N = {
@@ -126,6 +135,10 @@ const I18N = {
     nextMatch: "Новий матч",
     setWon: "{name} виграв сет ({setsWon}/{setsTarget})",
     matchWon: "{name} виграв матч ({setsWon}/{setsTarget})",
+    finishWinner: "Переможець: {name}",
+    finishDartsLabel: "Дротики",
+    finishAvgLabel: "Середнє",
+    finishCloseLabel: "Дротик",
   },
   en: {
     appTitle: "Darts Score",
@@ -156,6 +169,10 @@ const I18N = {
     nextMatch: "New match",
     setWon: "{name} won the set ({setsWon}/{setsTarget})",
     matchWon: "{name} won the match ({setsWon}/{setsTarget})",
+    finishWinner: "Winner: {name}",
+    finishDartsLabel: "Darts",
+    finishAvgLabel: "Avg",
+    finishCloseLabel: "Dart",
   },
 };
 
@@ -247,6 +264,7 @@ function applyLanguage() {
     btn.textContent = t("removePlayer");
   });
   renderStartScoreToggle();
+  renderFinishSummary();
 }
 
 function setLanguage(lang) {
@@ -978,7 +996,7 @@ async function applyQuickOut() {
   const remaining = 3 - state.dartInTurn;
   try {
     for (let i = 0; i < remaining; i += 1) {
-      applyThrow("0", 0);
+      applyThrow("0", 0, { allowDuringQuickOut: true });
       if (i < remaining - 1 && state.gameStarted) {
         // Small delay so each OUT is clearly visible in the throw boxes.
         await delay(320);
@@ -1091,6 +1109,38 @@ function updateLegTexts() {
   finishText.textContent = text;
 }
 
+function renderFinishSummary() {
+  if (!finishWinner || !finishStats) {
+    return;
+  }
+  if (!state.finishSummary) {
+    finishWinner.textContent = "";
+    finishStats.classList.add("hidden");
+    return;
+  }
+  const { winnerName, totalDarts, avg, closedDart } = state.finishSummary;
+  finishWinner.textContent = withVars(t("finishWinner"), { name: winnerName });
+  if (finishDartsValue) {
+    finishDartsValue.textContent = String(totalDarts);
+  }
+  if (finishAvgValue) {
+    finishAvgValue.textContent = String(avg);
+  }
+  if (finishCloseValue) {
+    finishCloseValue.textContent = String(closedDart ?? "");
+  }
+  if (finishDartsLabel) {
+    finishDartsLabel.textContent = t("finishDartsLabel");
+  }
+  if (finishAvgLabel) {
+    finishAvgLabel.textContent = t("finishAvgLabel");
+  }
+  if (finishCloseLabel) {
+    finishCloseLabel.textContent = t("finishCloseLabel");
+  }
+  finishStats.classList.remove("hidden");
+}
+
 function startNewLeg(startingPlayer) {
   if (state.pendingOutClearTimer) {
     clearTimeout(state.pendingOutClearTimer);
@@ -1113,6 +1163,8 @@ function startNewLeg(startingPlayer) {
   state.history = [];
   state.gameStarted = true;
   state.matchFinished = false;
+  state.finishSummary = null;
+  renderFinishSummary();
 }
 
 function finishLeg(winnerIndex, dartNumber) {
@@ -1123,6 +1175,15 @@ function finishLeg(winnerIndex, dartNumber) {
   state.bullOffActive = false;
   state.matchFinished = matchWon;
   state.pendingLegStarter = matchWon ? null : (state.legStarter + 1) % state.players.length;
+  const avgValue =
+    winner.totalDarts > 0 ? ((winner.pointsScored * 3) / winner.totalDarts).toFixed(1) : "0.0";
+  state.finishSummary = {
+    winnerName: winner.name,
+    totalDarts: winner.totalDarts,
+    avg: avgValue,
+    closedDart: dartNumber,
+  };
+  renderFinishSummary();
   if (matchWon) {
     finishText.textContent = withVars(t("matchWon"), {
       name: winner.name,
@@ -1144,8 +1205,12 @@ function finishLeg(winnerIndex, dartNumber) {
   finishOverlay.classList.remove("hidden");
 }
 
-function applyThrow(label, value) {
-  if (!state.gameStarted || state.players.length === 0 || state.quickOutInProgress) {
+function applyThrow(label, value, options = {}) {
+  if (
+    !state.gameStarted ||
+    state.players.length === 0 ||
+    (state.quickOutInProgress && !options.allowDuringQuickOut)
+  ) {
     return;
   }
 
@@ -1179,6 +1244,7 @@ function applyThrow(label, value) {
     playerLegsInSet: player.legsInSet,
     playerLastTurnTotal: player.lastTurnTotal,
     lastClosedDart: state.lastClosedDart,
+    finishSummary: state.finishSummary ? { ...state.finishSummary } : null,
     finishTextContent: finishText.textContent,
     finishModalOpen: !finishOverlay.classList.contains("hidden"),
     bullModalOpen: bullOverlay ? !bullOverlay.classList.contains("hidden") : false,
@@ -1252,6 +1318,7 @@ function undo() {
   state.bullOffActive = snapshot.bullOffActive;
   state.pendingLegStarter = snapshot.pendingLegStarter;
   state.lastClosedDart = snapshot.lastClosedDart;
+  state.finishSummary = snapshot.finishSummary || null;
   if (snapshot.allPlayersSetState) {
     state.players.forEach((item, idx) => {
       const snap = snapshot.allPlayersSetState[idx];
@@ -1283,6 +1350,7 @@ function undo() {
   if (typeof snapshot.finishTextContent === "string") {
     finishText.textContent = snapshot.finishTextContent;
   }
+  renderFinishSummary();
   nextLegBtn.textContent = state.matchFinished ? t("nextMatch") : t("nextLeg");
   if (snapshot.bullModalOpen) {
     bullOverlay.classList.remove("hidden");
@@ -1312,6 +1380,8 @@ function resetMatch() {
   state.bullOffActive = false;
   state.lastClosedDart = null;
   updateLegTexts();
+  state.finishSummary = null;
+  renderFinishSummary();
   finishOverlay.classList.add("hidden");
   bullOverlay.classList.add("hidden");
   startNewLeg(0);
@@ -1355,8 +1425,9 @@ function updateOrderButtons() {
   rows.forEach((row, index) => {
     const swapBtn = row.querySelector(".order-btn");
     if (swapBtn) {
-      swapBtn.disabled = rows.length < 2 || index !== 0;
-      swapBtn.style.visibility = index === 0 ? "visible" : "hidden";
+      const show = rows.length === 2 && index === 0;
+      swapBtn.disabled = !show;
+      swapBtn.style.visibility = show ? "visible" : "hidden";
     }
   });
 }

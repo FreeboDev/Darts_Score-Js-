@@ -152,6 +152,51 @@
       <div class="setup-modal">
         <h2 id="finishTitle">Партію закрито</h2>
         <p id="finishText"></p>
+        <div id="finishWinner" class="finish-winner"></div>
+        <div id="finishStats" class="finish-stats hidden">
+          <div class="finish-stat">
+            <svg class="finish-icon finish-dart-icon" viewBox="0 0 120 36" aria-hidden="true">
+              <polygon points="108,8 118,18 108,28 96,24 96,12"></polygon>
+              <rect x="90" y="15" width="22" height="6" rx="3"></rect>
+              <circle cx="88" cy="18" r="4"></circle>
+              <rect x="18" y="17" width="66" height="2" rx="1"></rect>
+              <rect x="58" y="14" width="4" height="8" rx="1"></rect>
+              <rect x="52" y="14" width="3" height="8" rx="1"></rect>
+              <rect x="46" y="14" width="3" height="8" rx="1"></rect>
+              <rect x="14" y="15" width="6" height="6" rx="2"></rect>
+              <polygon points="2,18 14,18 14,20 2,20"></polygon>
+            </svg>
+            <div class="finish-stat-text">
+              <div id="finishDartsValue" class="finish-stat-value">0</div>
+              <div id="finishDartsLabel" class="finish-stat-label">Darts</div>
+            </div>
+          </div>
+          <div class="finish-stat">
+            <svg class="finish-icon finish-avg-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8"></circle>
+              <circle cx="12" cy="12" r="4.2"></circle>
+              <circle cx="12" cy="12" r="1.7"></circle>
+              <path d="M12 2v3"></path>
+              <path d="M12 19v3"></path>
+              <path d="M2 12h3"></path>
+              <path d="M19 12h3"></path>
+            </svg>
+            <div class="finish-stat-text">
+              <div id="finishAvgValue" class="finish-stat-value">0.0</div>
+              <div id="finishAvgLabel" class="finish-stat-label">Avg</div>
+            </div>
+          </div>
+          <div class="finish-stat">
+            <svg class="finish-icon finish-flag-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 20V4"></path>
+              <path d="M6 5h11l-2 3 2 3H6"></path>
+            </svg>
+            <div class="finish-stat-text">
+              <div id="finishCloseValue" class="finish-stat-value">1</div>
+              <div id="finishCloseLabel" class="finish-stat-label">Dart</div>
+            </div>
+          </div>
+        </div>
         <div class="setup-actions">
           <button id="nextLegBtn" type="button">Наступна партія</button>
         </div>
